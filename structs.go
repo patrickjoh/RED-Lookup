@@ -1,23 +1,22 @@
 package Assignment2
 
 type StatusData struct {
-	countries_api   string
-	notification_db string
-	webhooks        string
-	version         string
-	uptime          string
+	Countries_api   string
+	Notification_db string
+	Version         string
+	Uptime          string
 }
 
 type CountData struct {
-	name       string
-	isoCode    string
-	year       int
-	percentage float64
+	Name       string
+	IsoCode    string
+	Year       int
+	Percentage float64
 }
 
 type WebhookData struct {
-	webhook_id string
-	url        string
-	country    string
-	calls      int
+	Webhook_id string
+	Url        string
+	Country    string
+	Calls      int
 }

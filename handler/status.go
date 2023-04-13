@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"Assignment2"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -39,15 +40,15 @@ func HandelStatus(w http.ResponseWriter, r *http.Request) {
 
 	// ...
 
-	status := statusData{
-		countries_api:   statusMap[url1],
+	stData := Assignment2.StatusData{
+		Countries_api:   statusMap[url1],
 		notification_db: statusMap[url2],
 		version:         "v1",
 		uptime:          time.Since(startTime).String(),
 	}
 
 	// Encode struct as JSON
-	data, err := json.Marshal(diagnostics)
+	data, err := json.Marshal(stData)
 	if err != nil {
 		fmt.Errorf("Error encoding JSON: %s", err.Error())
 		return
