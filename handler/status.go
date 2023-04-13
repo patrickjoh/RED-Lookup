@@ -28,7 +28,7 @@ func HandlerStaus(r http.ResponseWriter, w *http.Request) {
 	return
 }
 
-// HandelStatusGet
+// HandelStatusGet: shows availability for all third party services
 func HandelStatus(w http.ResponseWriter, r *http.Request) {
 	// Define the URLs
 	url1 := "http://universities.hipolabs.com/"
@@ -38,13 +38,13 @@ func HandelStatus(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 	defer client.CloseIdleConnections()
 
-	// ...
+	// TODO: implement get request
 
 	stData := Assignment2.StatusData{
-		Countries_api:   statusMap[url1],
-		notification_db: statusMap[url2],
-		version:         "v1",
-		uptime:          time.Since(startTime).String(),
+		Countries_api:   statusMap[url1], // TODO
+		Notification_db: statusMap[url2], // TODO
+		Version:         "v1",
+		Uptime:          time.Since(startTime).String(),
 	}
 
 	// Encode struct as JSON
