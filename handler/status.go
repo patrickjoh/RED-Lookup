@@ -17,7 +17,7 @@ func init() {
 /*
 HandlerStaus: Entry point handler for Status handler
 */
-func HandlerStaus(r http.ResponseWriter, w *http.Request) {
+func HandlerStaus(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		HandelStatus(w, r)
@@ -31,8 +31,8 @@ func HandlerStaus(r http.ResponseWriter, w *http.Request) {
 // HandelStatusGet: shows availability for all third party services
 func HandelStatus(w http.ResponseWriter, r *http.Request) {
 	// Define the URLs
-	url1 := "http://universities.hipolabs.com/"
-	url2 := "https://restcountries.com/"
+	//url1 := ... // TODO
+	//url2 := ... // TODO
 
 	// Instantiate client
 	client := &http.Client{}
@@ -41,10 +41,10 @@ func HandelStatus(w http.ResponseWriter, r *http.Request) {
 	// TODO: implement get request
 
 	stData := Assignment2.StatusData{
-		Countries_api:   statusMap[url1], // TODO
-		Notification_db: statusMap[url2], // TODO
-		Version:         "v1",
-		Uptime:          time.Since(startTime).String(),
+		//Countries_api:   ..., // TODO
+		//Notification_db: ..., // TODO
+		Version: "v1",
+		Uptime:  time.Since(startTime).String(),
 	}
 
 	// Encode struct as JSON
