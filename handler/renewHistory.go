@@ -1,8 +1,6 @@
-package Assignment2
+package handler
 
 import (
-	"encoding/json"
-	"log"
 	"net/http"
 )
 

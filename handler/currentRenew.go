@@ -1,22 +1,22 @@
-package Assignment2
+package handler
 
 import (
-	"encoding/json"
-	"log"
 	"net/http"
 )
 
 // Documentation...
-func HandlerRenewables() func(http.ResponseWriter, *http.Request) {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			HandlerRenewablesPost(w, r)
-		case http.MethodGet:
-			HandlerRenewablesGet(w, r)
-		}
+func HandlerRenewables(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		HandlerRenewablesPost(w, r)
+	case http.MethodGet:
+		HandlerRenewablesGet(w, r)
+	default:
+		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
+			"' is supported.", http.StatusNotImplemented)
 	}
+	return
+
 }
 
 // HandlerRenewablesPost

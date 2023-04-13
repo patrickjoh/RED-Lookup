@@ -1,13 +1,11 @@
-package Assignment2
+package handler
 
 import (
-	"encoding/json"
-	"log"
 	"net/http"
 )
 
 // Documentation...
-func HandlerStatus() func(http.ResponseWriter, *http.Request) {
+func HandlerStaus() func(http.ResponseWriter, *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

@@ -1,4 +1,4 @@
-package Assignment2
+package handler
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 // HandlerStudent main handler for route related to `/students` requests
 // Note: here we are using a higher-order function with closure, to propagate a reference
 // to the DB down the processing pipeline.
-func HandlerStudent(db StudentsStorage) func(http.ResponseWriter, *http.Request) {
+func HandlerNotifications(db StudentsStorage) func(http.ResponseWriter, *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
