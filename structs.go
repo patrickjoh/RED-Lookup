@@ -1,6 +1,6 @@
 package Assignment2
 
-type statusData struct {
+type StatusData struct {
 	countries_api   string
 	notification_db string
 	webhooks        string
@@ -8,14 +8,14 @@ type statusData struct {
 	uptime          string
 }
 
-type countData struct {
+type CountData struct {
 	name       string
 	isoCode    string
 	year       int
 	percentage float64
 }
 
-type webhookData struct {
+type WebhookData struct {
 	webhook_id string
 	url        string
 	country    string
