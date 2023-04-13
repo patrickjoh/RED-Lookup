@@ -219,8 +219,16 @@ Body (Exemplary message based on schema):
 /energy/v1/status/
 
 ## Dependencies
+### Third party services
+REST Countries API:
 
-## Contributers
+Renewable Energy Dataset: https://ourworldindata.org/energy
+
+Documentation: https://drive.google.com/file/d/18G470pU2NRniDfAYJ27XgHyrWOThP__p/view
+
+### Imported modules
+
+## Contributors
 ### Developers
 This project was developed by:
   - Hoa Ben The Nguyen
@@ -229,3 +237,4 @@ This project was developed by:
   - Sara Djordjevic
 
 ## Deployment
+This service is to be deployed on an IaaS solution OpenStack using Docker.
