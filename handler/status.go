@@ -5,24 +5,18 @@ import (
 )
 
 // Documentation...
-func HandlerStaus() func(http.ResponseWriter, *http.Request) {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			HandlerRenewablesPost(w, r)
-		case http.MethodGet:
-			HandlerRenewablesGet(w, r)
-		}
+func HandlerStaus(r http.ResponseWriter, w *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		HandelStatusGet(w, r)
+	default:
+		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
+			"' is supported.", http.StatusNotImplemented)
 	}
+	return
 }
 
-// HandlerRenewablesPost
-func HandlerStatusPost(w http.ResponseWriter, r *http.Request) {
-
-}
-
-// HandlerRenewablesGet
-func HandlerStatusGet(w http.ResponseWriter, r *http.Request) {
+// HandelStatusGet
+func HandelStatusGet(w http.ResponseWriter, r *http.Request) {
 
 }
