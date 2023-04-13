@@ -1,4 +1,4 @@
-package Assignment2
+package handler
 
 import (
 	"fmt"
