@@ -221,5 +221,11 @@ Body (Exemplary message based on schema):
 ## Dependencies
 
 ## Contributers
+### Developers
+This project was developed by:
+  - Hoa Ben The Nguyen
+  - Magnus Johannessen
+  - Patrick Johannessen
+  - Sara Djordjevic
 
 ## Deployment
