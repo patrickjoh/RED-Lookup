@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
-// Documentation...
+// Method handler for handleRenewablesGet
 func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -33,8 +34,22 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var countryData []Assignment2.CountryData
+	// Get the limit parameter from the URL query parameters
+	neighbourStr := r.URL.Query().Get("neighbours")
+	neighbourBool, err := strconv.ParseBool(neighbourStr)
+	if err != nil && neighbourStr != "" {
+		http.Error(w, "Invalid neighbours parameter", http.StatusBadRequest)
+		log.Println("Invalid neighbours parameter")
+		return
+	}
+	// Set the default value of neighbourBool to false
+	neighbourBool = false
+	// If neighbourStr is empty, neighbourBool is false
+	if neighbourStr != "" {
+		neighbourBool = true
+	}
 
+	var countryData []Assignment2.CountryData
 	// If country code is provided
 	if len(keywords) >= 6 {
 		if len(keywords[8]) == 3 {
@@ -42,8 +57,17 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		} else {
 			var isoCodes []string
 			isoCodes = append(isoCodes, keywords[5])
-			// if (neighbor bool is set)
-			// 	isoCodes = append(isoCodes, getNeighborCountry(keywords[5]))
+			if neighbourBool {
+				bordering, err := getNeighborCountry(w, keywords[5])
+				if err != nil {
+					log.Fatal(err)
+				}
+				for _, borders := range bordering {
+					isoCodes = append(isoCodes, borders)
+				}
+
+			}
+
 			countryData = getOneCountry(convertCsvData(), isoCodes)
 		}
 	} else { // If no country code is provided
