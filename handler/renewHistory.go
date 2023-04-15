@@ -41,8 +41,13 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count := urlKeywords[5] // Get country name from url
+	iso := urlKeywords[5]   // Get country isoCode from url
 	query := r.URL.RawQuery // Get the queries from url
+
+	if len(iso) != 3 {
+		log.Println(w, "Malformed URL", http.StatusBadRequest)
+		return
+	}
 
 	// Parse the query string into a map
 	params, err := url.ParseQuery(query)
@@ -56,9 +61,9 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 	end := params.Get("end")
 
 	// Send a response with the extracted values
-	fmt.Fprintf(w, "Searching for: country = %s, year (%s - %s)", count, begin, end)
+	fmt.Fprintf(w, "Searching for: country = %s, year (%s - %s)", iso, begin, end)
 
-	country := findCountry(convertCsvData(), count) // Acquire data from csv-file
+	country := findCountry(convertCsvData(), iso) // Acquire data from csv-file
 
 	var countData []Assignment2.CountryData // empty list for the final data
 	startYear, _ := strconv.Atoi(begin)     // beginning year
