@@ -21,3 +21,9 @@ type WebhookData struct {
 	Country   string `json:"country"`
 	Calls     int    `json:"calls"`
 }
+
+// Country Struct for storing data from REST Countries API
+type Country struct {
+	Alpha3Code string   `json:"cca3"`
+	Border     []string `json:"borders"`
+}

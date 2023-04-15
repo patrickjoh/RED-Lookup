@@ -10,7 +10,7 @@ import (
 )
 
 // Documentation...
-func HandlerRenewables(w http.ResponseWriter, r *http.Request) {
+func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		handleRenewablesGet(w, r)
@@ -33,23 +33,15 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var neighbors = false
-
-	// If neighbor bool parameter is provided
-	if len(keywords) > 7 {
-		if len(keywords[8]) == 3 {
-			fmt.Println("Length of iso code mus be 3")
-		} else {
-			neighbors = true
-		}
-	}
-
 	var countryData []Assignment2.CountryData
 
 	// If country code is provided
 	if len(keywords) >= 6 {
-		// UWU transform to upper case
-		countryData = getOneCountry(convertCsvData(), keywords[5], neighbors)
+		if len(keywords[8]) == 3 {
+			fmt.Println("Length of iso code mus be 3")
+		} else {
+			countryData = getOneCountry(convertCsvData(), keywords[5])
+		}
 	} else { // If no country code is provided
 		countryData = getAllCountries(convertCsvData())
 	}
@@ -86,7 +78,7 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 	return retData
 }
 
-func getOneCountry(data []Assignment2.CountryData, keyword string, neighbor bool) []Assignment2.CountryData {
+func getOneCountry(data []Assignment2.CountryData, keyword string) []Assignment2.CountryData {
 
 	var retData []Assignment2.CountryData
 	currHighYear := 0 // Current highest year
@@ -103,6 +95,49 @@ func getOneCountry(data []Assignment2.CountryData, keyword string, neighbor bool
 	return retData
 }
 
-func getNeighborCountry() {
+func getNeighborCountry(w http.ResponseWriter, IsoCode string) ([]string, error) {
+	var borderCountries []string
+	// Get bordering countries data from "REST_Countries" API
+	specCountryURL := Assignment2.COUNTRYAPI_CODES + IsoCode
+	countryResponse, err := http.Get(specCountryURL)
+	if err != nil {
+		http.Error(w, "Error during request to CountryAPI", http.StatusInternalServerError)
+		log.Println("Failed to get bordering country data from CountryAPI")
+		return nil, err
+	}
+	// Close the response body when the function returns
+	defer countryResponse.Body.Close()
 
+	// Struct to hold the response for the specified country
+	var specCountryData []Assignment2.Country
+	// Decode the response body into the struct
+	err = json.NewDecoder(countryResponse.Body).Decode(&specCountryData)
+	if err != nil {
+		http.Error(w, "Error during request to CountryAPI", http.StatusInternalServerError)
+		log.Println("Failed to decode country data from CountryAPI, about the specified country")
+		return nil, err
+	}
+
+	// Get country data from "REST_Countries" API based on the list of border countries
+	borders := specCountryData[0].Border
+
+	// Check if the country has any bordering countries
+	if len(specCountryData[0].Border) == 0 {
+		http.Error(w, "No bordering countries", http.StatusNotFound)
+		log.Println("No bordering countries")
+		return nil, err
+	}
+	// Get country data from "REST_Countries" API based on the list of border countries
+	countryData, err := getCountries(borders)
+	if err != nil {
+		http.Error(w, "Error during request to CountryAPI", http.StatusInternalServerError)
+		log.Println("Failed to get country data from CountryAPI, about the bordering countries")
+		return nil, err
+	}
+	// Append the border countries to the list of border countries
+	for _, country := range countryData {
+		borderCountries = append(borderCountries, country.Alpha3Code)
+	}
+	// Return the list of border countries
+	return borderCountries, err
 }

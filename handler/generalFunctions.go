@@ -3,7 +3,10 @@ package handler
 import (
 	"Assignment2"
 	"encoding/csv"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -74,4 +77,33 @@ func findCountry(countries []Assignment2.CountryData, Iso string) []Assignment2.
 		}
 	}
 	return countData
+}
+
+func getCountries(isoCode []string) ([]Assignment2.Country, error) {
+
+	countryUrl := Assignment2.COUNTRYAPI_CODES
+	// Loop through each ISO code and append the code the URL
+	// Append each code to the URL with a comma delimiter
+	isoCodesStr := strings.Join(isoCode, ",")
+	countryUrl += isoCodesStr
+
+	countryResponse, err := http.Get(countryUrl)
+	if err != nil {
+		return nil, err
+	}
+	defer countryResponse.Body.Close()
+
+	// Decode the JSON response into a slice of "Country" structs
+	var countryData []Assignment2.Country
+	err = json.NewDecoder(countryResponse.Body).Decode(&countryData)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if any countries were found
+	if len(countryData) == 0 {
+		return nil, errors.New("No countries found")
+	}
+
+	return countryData, nil
 }
