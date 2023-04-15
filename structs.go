@@ -8,10 +8,10 @@ type StatusData struct {
 }
 
 type CountData struct {
-	Name       string  `json:"name"`
-	IsoCode    string  `json:"isoCode"`
-	Year       int     `json:"year"`
-	Percentage float64 `json:"percentage"`
+	Name       string `json:"name"`
+	IsoCode    string `json:"isoCode"`
+	Year       string `json:"year"`
+	Percentage string `json:"percentage"`
 }
 
 type WebhookData struct {
