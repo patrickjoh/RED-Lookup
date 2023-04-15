@@ -2,12 +2,11 @@ package handler
 
 import (
 	"Assignment2"
-	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -42,11 +41,8 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("\nlen(keywords): ", len(urlKeywords))
-	fmt.Println("\nkeywords[5]: ", urlKeywords[5])
-
-	count := urlKeywords[5]
-	query := r.URL.RawQuery
+	count := urlKeywords[5] // Get country name from url
+	query := r.URL.RawQuery // Get the queries from url
 
 	// Parse the query string into a map
 	params, err := url.ParseQuery(query)
@@ -60,44 +56,35 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 	end := params.Get("end")
 
 	// Send a response with the extracted values
-	fmt.Fprintf(w, "Search query: country = %s, year (%s - %s)", count, begin, end)
+	fmt.Fprintf(w, "Searching for: country = %s, year (%s - %s)", count, begin, end)
 
-	// open CSV file
-	fd, error := os.Open("handler/data/renewable-share-energy.csv")
-	if error != nil {
-		fmt.Println("err occured", error)
-	}
-	fmt.Println("Successfully opened the CSV file")
-	defer fd.Close()
+	contries := convertCsvData() // Acquire data from csv-file
 
-	// read CSV file
-	fileReader := csv.NewReader(fd)
-	records, error := fileReader.ReadAll()
-	if error != nil {
-		fmt.Println(error)
-	}
+	var countData []Assignment2.CountryData // empty list for the final data
+	startYear, _ := strconv.Atoi(begin)     // beginning year
+	endYear, _ := strconv.Atoi(end)         // end year
 
-	var countData []Assignment2.HisData
-	startYear, _ := strconv.Atoi(begin)
-	endYear, _ := strconv.Atoi(end)
-
-	for _, col := range records {
-		year, _ := strconv.Atoi(col[2])
-		if col[0] == count && year < endYear && year > startYear {
-			fmt.Println("country found: ")
-			for _, row := range col {
-				fmt.Println(row + " ")
-			}
-			newHisData := Assignment2.HisData{
-				Name:       col[0],
-				IsoCode:    col[1],
-				Year:       year,
-				Percentage: col[3],
+	fmt.Println(contries[0].Name)
+	// loops through the csv-file and return the data that was asked for
+	for _, col := range contries {
+		if col.Name == count && col.Year < endYear && col.Year > startYear {
+			newHisData := Assignment2.CountryData{
+				Name:       col.Name,
+				IsoCode:    col.IsoCode,
+				Year:       col.Year,
+				Percentage: col.Percentage,
 			}
 			countData = append(countData, newHisData)
 		}
 	}
-
-	fmt.Println(startYear, " ", endYear)
 	fmt.Println(countData)
+
+	jsonResponse, err := json.Marshal(countData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+
 }
