@@ -31,7 +31,7 @@ func stubHandler(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Parse the JSON file
-	output := parseFile("./res/RESTCountry.json")
+	output := parseFile("stub/res/RESTCountry.json")
 
 	// Finally, let's write the JSON to the response
 	w.Write(output)

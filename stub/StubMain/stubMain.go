@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func main() {
+func StubMain() {
 
 	// Define port
 	port := os.Getenv("PORT")
@@ -17,13 +17,9 @@ func main() {
 	}
 
 	// Standard http server with reference to stubbed handler
-	http.HandleFunc("countries/fetch", stub.HandlerStub)
+	http.HandleFunc("/", stub.HandlerStub)
 
 	log.Println("Running on port", port)
-
-	err := http.ListenAndServe(":"+port, nil)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 
 }
