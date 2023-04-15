@@ -25,7 +25,7 @@ func main() {
 
 	mux := http.NewServeMux() // Create a new ServeMux for the main application
 	mux.HandleFunc(Assignment2.DEFAULT_PATH, handler.EmptyHandler)
-	mux.HandleFunc(Assignment2.HISTORY_PATH, handler.HandlerHistory)
+	mux.HandleFunc(Assignment2.HISTORY_PATH, handler.HistoryHandler)
 	mux.HandleFunc(Assignment2.NOTIFICATION_PATH, handler.HandlerNotifications)
 	mux.HandleFunc(Assignment2.STATUS_PATH, handler.HandlerStatus)
 	mux.HandleFunc(Assignment2.CURRENT_PATH, handler.RenewablesHandler)

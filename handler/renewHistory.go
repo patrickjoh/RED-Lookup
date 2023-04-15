@@ -12,7 +12,7 @@ import (
 )
 
 // Documentation...
-func HandlerHistory(w http.ResponseWriter, r *http.Request) {
+func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		HandelHistoryPost(w, r)
