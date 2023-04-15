@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -74,14 +73,13 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 	// Finding entries with the most recent year
 	for i, current := range data {
 		if current.Name == currCount { // Still same country?
-			year, _ := strconv.Atoi(current.Year)
-			if year > currHighYear { // New highest year found
+			if current.Year > currHighYear { // New highest year found
 				highestRecord = current
 				fmt.Println(i) // UWU remove
 			}
 		} else { // New country entered
 			currCount = current.Name
-			currHighYear, _ = strconv.Atoi(current.Year)
+			currHighYear = current.Year
 			retData = append(retData, highestRecord)
 		}
 	}
