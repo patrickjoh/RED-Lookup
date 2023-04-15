@@ -10,18 +10,28 @@ import (
 
 func convertCsvData() []Assignment2.CountryData {
 	// Open CSV file
-	file, error := os.Open(Assignment2.CSV_PATH)
-	if error != nil {
-		fmt.Println(error)
+	file, err := os.Open(Assignment2.CSV_PATH)
+	if err != nil {
+		fmt.Println(err)
 	}
-	fmt.Println("Successfully opened the CSV file") // UWU remove when done
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println("Error closing file: ", err)
+		}
+	}(file)
 
 	// Read CSV file
 	fileReader := csv.NewReader(file)
-	records, error := fileReader.ReadAll()
-	if error != nil {
-		fmt.Println(error)
+	// Read and skip the header row
+	_, err = fileReader.Read()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	records, err := fileReader.ReadAll()
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	var csvData []Assignment2.CountryData
