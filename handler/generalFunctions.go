@@ -56,11 +56,14 @@ func convertCsvData() []Assignment2.CountryData {
 	return csvData
 }
 
-// Find all country data based on partial or full name of the country
-func findCountry(countries []Assignment2.CountryData, partialName string) []Assignment2.CountryData {
+// Find all country data for a given ISO code
+func findCountry(countries []Assignment2.CountryData, Iso string) []Assignment2.CountryData {
 	var countData []Assignment2.CountryData // empty list for the final data
+
+	// Convert to upper case to avoid case sensitivity
+	Iso = strings.ToUpper(Iso)
 	for _, col := range countries {
-		if strings.Contains(col.Name, partialName) {
+		if strings.Contains(col.IsoCode, Iso) {
 			newHisData := Assignment2.CountryData{
 				Name:       col.Name,
 				IsoCode:    col.IsoCode,
