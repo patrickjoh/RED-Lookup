@@ -68,6 +68,7 @@ func handleStatus(w http.ResponseWriter) {
 	// Get status codes from response structs
 	stData := Assignment2.StatusData{
 		CountriesAPI: restResp.Status,
+		//NotificationDB:
 		//Webhooks: , // TODO
 		Version: "v1",
 		Uptime:  time.Since(startTime).String(),
