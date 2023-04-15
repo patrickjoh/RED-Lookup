@@ -2,9 +2,11 @@ package handler
 
 import (
 	"Assignment2"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -32,16 +34,23 @@ func HandlerStaus(w http.ResponseWriter, r *http.Request) {
 func handelStatus(w http.ResponseWriter) {
 	// Define the URLs
 	restUrl := "http://129.241.150.113:8080/"
-	dataUrl := "https://ourworldindata.org/energy"
 
-	// Make requests using http.Get
-	dataResp, err := http.Get(dataUrl)
-	if err != nil {
-		fmt.Errorf("Error in response: %s", err.Error())
+	// open CSV file
+	fd, error := os.Open("data/renewable-share-energy-csv")
+	if error != nil {
+		fmt.Println(error)
 	}
+	fmt.Println("Successfully opened the CSV file")
+	defer fd.Close()
 
-	// Close response bodies when done
-	defer dataResp.Body.Close()
+	// read CSV file
+	fileReader := csv.NewReader(fd)
+	records, error := fileReader.ReadAll()
+	if error != nil {
+		fmt.Println(error)
+	}
+	fmt.Println(records)
+}
 
 	restResp, err := http.Get(restUrl)
 	if err != nil {
@@ -52,8 +61,7 @@ func handelStatus(w http.ResponseWriter) {
 
 	// Get status codes from response structs
 	stData := Assignment2.StatusData{
-		Countries_api:   restResp.Status,
-		Notification_db: dataResp.Status,
+		Countries_api: restResp.Status,
 		//Webhooks: , // TODO
 		Version: "v1",
 		Uptime:  time.Since(startTime).String(),
