@@ -12,7 +12,21 @@ type Country struct {
 	Code string `json:"code"`
 }
 
-func StubHandler(w http.ResponseWriter) {
+func HandlerStub(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	// If the request is a GET, then call the stubHandler
+	case http.MethodGet:
+		stubHandler(w)
+	default:
+		// Otherwise, return an error
+		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
+			"' is supported.", http.StatusNotImplemented)
+	}
+	return
+
+}
+
+func stubHandler(w http.ResponseWriter) {
 	// Set the content type to JSON
 	w.Header().Set("Content-Type", "application/json")
 
