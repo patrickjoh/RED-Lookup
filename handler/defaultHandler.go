@@ -14,16 +14,32 @@ func EmptyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "text/html")
 
 	// Offer information for redirection to paths
-	output := "<h1>Welcome!<h1><h3>This service does not provide any functionality on root path level." +
-		" Please try one of the paths below<h3>" +
-		"<h5 style=\"background-color: lightblue; width: 250px;\">Search for current percentage of renewables:<br>" +
-		"<a href=\"" + Assignment2.CURRENT_PATH + "\">" + Assignment2.CURRENT_PATH + "</a></h5>" +
-		"<h5 style=\"background-color: lightblue; width: 250px;\">Search for historical percentage of renewables:<br>" +
-		"<a href=\"" + Assignment2.HISTORY_PATH + "\">" + Assignment2.HISTORY_PATH + "</a></h5>" +
-		"<h5 style=\"background-color: lightblue; width: 250px;\">Search for notification endpoint:<br>" +
-		"<a href=\"" + Assignment2.NOTIFICATION_PATH + "\">" + Assignment2.NOTIFICATION_PATH + "</a></h5>" +
-		"<h5 style=\"background-color: lightblue; width: 250px;\">For status:<br>" +
-		"<a href=\"" + Assignment2.STATUS_PATH + "\">" + Assignment2.STATUS_PATH + "</a></h5>"
+	output := "<h1>!placeholder!</h1>" +
+		"<p>This service does not provide any functionality on the root path level. Please try one of the paths below:</p>" +
+		"<h3>Search for current percentage of renewables:</h3>" +
+		"<ul>" +
+		"<li>" +
+		"<a href=\"" + Assignment2.CURRENT_PATH + "\">" + Assignment2.CURRENT_PATH + "</a>" +
+		"</li>" +
+		"</ul>" +
+		"<h3>Search for historical percentage of renewables:</h3>" +
+		"<ul>" +
+		"<li>" +
+		"<a href=\"" + Assignment2.HISTORY_PATH + "\">" + Assignment2.HISTORY_PATH + "</a>" +
+		"</li>" +
+		"</ul>" +
+		"<h3>Search for notification endpoint:</h3>" +
+		"<ul>" +
+		"<li>" +
+		"<a href=\"" + Assignment2.NOTIFICATION_PATH + "\">" + Assignment2.NOTIFICATION_PATH + "</a>" +
+		"</li>" +
+		"</ul>" +
+		"<h3>Check the status:</h3>" +
+		"<ul>" +
+		"<li>" +
+		"<a href=\"" + Assignment2.STATUS_PATH + "\">" + Assignment2.STATUS_PATH + "</a>" +
+		"</li>" +
+		"</ul>"
 
 	// Write output to client
 	_, err := fmt.Fprintf(w, "%v", output)
