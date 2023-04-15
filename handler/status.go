@@ -17,12 +17,12 @@ func init() {
 }
 
 /*
-HandlerStaus: Entry point handler for Status handler
+HandlerStatus: Entry point handler for Status handler
 */
-func HandlerStaus(w http.ResponseWriter, r *http.Request) {
+func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		handelStatus(w)
+		handleStatus(w)
 	default:
 		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
 			"' is supported.", http.StatusNotImplemented)
@@ -30,38 +30,39 @@ func HandlerStaus(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// HandelStatusGet: shows availability for all third party services
-func handelStatus(w http.ResponseWriter) {
+// handleStatus: shows availability for all third party services
+func handleStatus(w http.ResponseWriter) {
 	// Define the URLs
-	restUrl := "http://129.241.150.113:8080/"
+	restURL := "http://129.241.150.113:8080/"
 
 	// open CSV file
-	fd, error := os.Open("data/renewable-share-energy-csv")
-	if error != nil {
-		fmt.Println(error)
+	fd, err := os.Open("data/renewable-share-energy-csv.csv")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error opening CSV file: %s", err.Error()), http.StatusInternalServerError)
+		return
 	}
-	fmt.Println("Successfully opened the CSV file")
 	defer fd.Close()
 
 	// read CSV file
 	fileReader := csv.NewReader(fd)
-	records, error := fileReader.ReadAll()
-	if error != nil {
-		fmt.Println(error)
-	}
-	fmt.Println(records)
-}
-
-	restResp, err := http.Get(restUrl)
+	records, err := fileReader.ReadAll()
 	if err != nil {
-		fmt.Errorf("Error in response: %s", err.Error())
+		http.Error(w, fmt.Sprintf("Error reading CSV file: %s", err.Error()), http.StatusInternalServerError)
+		return
 	}
 
+	fmt.Println(records)
+
+	restResp, err := http.Get(restURL)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error in response: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
 	defer restResp.Body.Close()
 
 	// Get status codes from response structs
 	stData := Assignment2.StatusData{
-		Countries_api: restResp.Status,
+		CountriesAPI: restResp.Status,
 		//Webhooks: , // TODO
 		Version: "v1",
 		Uptime:  time.Since(startTime).String(),
@@ -70,12 +71,12 @@ func handelStatus(w http.ResponseWriter) {
 	// Encode struct as JSON
 	data, err := json.Marshal(stData)
 	if err != nil {
-		fmt.Errorf("Error encoding JSON: %s", err.Error())
+		http.Error(w, fmt.Sprintf("Error encoding JSON: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 
 	// Set content type
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
 	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }

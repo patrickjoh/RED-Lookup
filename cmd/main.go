@@ -26,7 +26,7 @@ func main() {
 	http.HandleFunc("/"+Assignment2.DEFAULT_PATH, handler.EmptyHandler)
 	http.HandleFunc("/"+Assignment2.HISTORY_PATH, handler.HandlerHistory)
 	http.HandleFunc("/"+Assignment2.NOTIFICATION_PATH, handler.HandlerNotifications)
-	http.HandleFunc("/"+Assignment2.STATUS_PATH, handler.HandlerStaus)
+	http.HandleFunc("/"+Assignment2.STATUS_PATH, handler.HandlerStatus)
 	http.HandleFunc("/"+Assignment2.CURRENT_PATH, handler.HandlerRenewables)
 
 	log.Println("Main service listening on port " + port)

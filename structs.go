@@ -1,11 +1,11 @@
 package Assignment2
 
 type StatusData struct {
-	Countries_api   string `json:"countries_api"`
-	Notification_db string `json:"notifications_db"`
-	Webhooks        int    `json:"webhooks"`
-	Version         string `json:"version"`
-	Uptime          string `json:"uptime"`
+	CountriesAPI   string `json:"countries_api"`
+	NotificationDB string `json:"notifications_db"`
+	Webhooks       int    `json:"webhooks"`
+	Version        string `json:"version"`
+	Uptime         string `json:"uptime"`
 }
 
 type CountData struct {
@@ -16,8 +16,8 @@ type CountData struct {
 }
 
 type WebhookData struct {
-	Webhook_id string `json:"webhook_id"`
-	Url        string `json:"url"`
-	Country    string `json:"country"`
-	Calls      int    `json:"calls"`
+	WebhookID string `json:"webhook_id"`
+	Url       string `json:"url"`
+	Country   string `json:"country"`
+	Calls     int    `json:"calls"`
 }
