@@ -43,7 +43,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		neighbors = true
 	}*/
 
-	var countryData []Assignment2.CountData
+	var countryData []Assignment2.CountryData
 
 	// If country code is provided
 	if len(keywords) >= 5 {
@@ -64,12 +64,12 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getAllCountries(data []Assignment2.CountData) []Assignment2.CountData {
+func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 
 	currCount := data[0].Name // Current country
 	currHighYear := 0         // Current highest year
-	var highestRecord Assignment2.CountData
-	var retData []Assignment2.CountData
+	var highestRecord Assignment2.CountryData
+	var retData []Assignment2.CountryData
 
 	// Finding entries with the most recent year
 	for i, current := range data {

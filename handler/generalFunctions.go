@@ -5,35 +5,42 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
 )
 
-func convertCsvData() []Assignment2.CountData {
+func convertCsvData() []Assignment2.CountryData {
 	// Open CSV file
-	fd, error := os.Open("/handler/data/renewable-share-energy.csv")
+	file, error := os.Open(Assignment2.CSV_PATH)
 	if error != nil {
 		fmt.Println(error)
 	}
 	fmt.Println("Successfully opened the CSV file") // UWU remove when done
-	defer fd.Close()
+	defer file.Close()
 
 	// Read CSV file
-	fileReader := csv.NewReader(fd)
+	fileReader := csv.NewReader(file)
 	records, error := fileReader.ReadAll()
 	if error != nil {
 		fmt.Println(error)
 	}
 
-	var csvData []Assignment2.CountData
+	var csvData []Assignment2.CountryData
 	for _, r := range records {
-		if r[1] != "" { // Filtering out continents
-			data := Assignment2.CountData{
-				Name:       r[0],
-				IsoCode:    r[1],
-				Year:       r[2],
-				Percentage: r[3],
-			}
-			csvData = append(csvData, data)
+		if r[1] == "" { // Filtering out continents
+			continue
 		}
+		year, err := strconv.Atoi(r[2])
+		if err != nil {
+			fmt.Println(err)
+		}
+		data := Assignment2.CountryData{
+			Name:       r[0],
+			IsoCode:    r[1],
+			Year:       year,
+			Percentage: r[3],
+		}
+		csvData = append(csvData, data)
 	}
+
 	return csvData
 }
