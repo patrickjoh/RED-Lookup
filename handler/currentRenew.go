@@ -14,8 +14,6 @@ import (
 // Documentation...
 func HandlerRenewables(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodPost:
-		HandlerRenewablesPost(w, r)
 	case http.MethodGet:
 		HandlerRenewablesGet(w, r)
 	default:
@@ -45,24 +43,31 @@ func HandlerRenewablesGet(w http.ResponseWriter, r *http.Request) {
 
 	// Split url to get keyword
 	keywords := strings.Split(r.URL.Path, "/")
+	fmt.Println("\nlen(keywords): ", len(keywords))
+	fmt.Println("\nkeywords[4]: ", keywords[4])
+	fmt.Println("\nkeywords[5]: ", keywords[5])
+	fmt.Println("\nkeywords[6]: ", keywords[6])
 
 	// Error handling
-	if len(keywords) != 5 || keywords[3] != "uniinfo" {
+	if len(keywords) < 5 || keywords[4] != "current" {
 		log.Println(w, "Malformed URL", http.StatusBadRequest)
 		return
 	}
 
-	// if {country} -> do something
-
-	// if {?neighbours=bool?} -> do something more
-
 	var countryData []Assignment2.CountData
 
-	for i, record := range records {
-		countryData[i].Name = record[0]
-		countryData[i].IsoCode = record[1]
-		countryData[i].Year = record[2]
-		countryData[i].Percentage = record[3]
+	var neighbors = false
+
+	// If neighbor bool parameter is provided
+	if len(keywords) > 5 {
+		neighbors = true
+	}
+
+	// If country code is provided
+	if len(keywords) == 5 {
+		getOneCountry(keywords[5], neighbors)
+	} else { // If no country code is provided
+		getAllCountries(countryData, records)
 	}
 
 	jsonResponse, err := json.Marshal(countryData)
@@ -76,7 +81,20 @@ func HandlerRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// HandlerRenewablesPost
-func HandlerRenewablesPost(w http.ResponseWriter, r *http.Request) {
+func getAllCountries(data []Assignment2.CountData, records [][]string) []Assignment2.CountData {
+	for i, record := range records {
+		data[i].Name = record[0]
+		data[i].IsoCode = record[1]
+		data[i].Year = record[2]
+		data[i].Percentage = record[3]
+	}
+	return data
+}
+
+func getOneCountry(keyword string, neighbor bool) {
+
+}
+
+func getNeighborCountry() {
 
 }
