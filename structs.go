@@ -3,6 +3,7 @@ package Assignment2
 type StatusData struct {
 	Countries_api   string `json:"countries_api"`
 	Notification_db string `json:"notifications_db"`
+	Webhooks        int    `json:"webhooks"`
 	Version         string `json:"version"`
 	Uptime          string `json:"uptime"`
 }
