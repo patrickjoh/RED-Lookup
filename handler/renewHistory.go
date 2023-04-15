@@ -60,6 +60,15 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 
+	if begin == "" && end == "" {
+		begin = "0"
+		end = "3000"
+	} else if begin == "" {
+		begin = end
+	} else if end == "" {
+		end = begin
+	}
+
 	// Send a response with the extracted values
 	fmt.Fprintf(w, "Searching for: country = %s, year (%s - %s)", iso, begin, end)
 
@@ -75,7 +84,7 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 
 	// loops through the csv-file and return the data that was asked for
 	for _, col := range country {
-		if col.Year < endYear && col.Year > startYear {
+		if col.Year <= endYear && col.Year >= startYear {
 			newHisData := Assignment2.CountryData{
 				Name:       col.Name,
 				IsoCode:    col.IsoCode,
