@@ -40,7 +40,11 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		if len(keywords[8]) == 3 {
 			fmt.Println("Length of iso code mus be 3")
 		} else {
-			countryData = getOneCountry(convertCsvData(), keywords[5])
+			var isoCodes []string
+			isoCodes = append(isoCodes, keywords[5])
+			// if (neighbor bool is set)
+			// 	isoCodes = append(isoCodes, getNeighborCountry(keywords[5]))
+			countryData = getOneCountry(convertCsvData(), isoCodes)
 		}
 	} else { // If no country code is provided
 		countryData = getAllCountries(convertCsvData())
@@ -78,6 +82,31 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 	return retData
 }
 
+// getOneCountry recursively gets countries from a slice of strings containing iso3codes
+func getOneCountry(data []Assignment2.CountryData, keywords []string) []Assignment2.CountryData {
+	var retData []Assignment2.CountryData
+	currHighYear := 0 // Current highest year
+	var highestRecord Assignment2.CountryData
+
+	relCountries := findCountry(data, keywords[len(keywords)-1])
+	for _, current := range relCountries {
+		if current.Year > currHighYear { // New highest year found
+			highestRecord = current
+		}
+	}
+
+	// Creating new keyword list for next iteration
+	newKeywords := keywords[:len(keywords)-1]
+	retData = append(retData, highestRecord)
+
+	// Potentially appending remaining neighboring countries recursively
+	if len(keywords) > 0 {
+		retData = getOneCountry(data, newKeywords)
+	}
+	return retData
+}
+
+/*	NON RECURSIVE IMPLEMENTATION
 func getOneCountry(data []Assignment2.CountryData, keyword string) []Assignment2.CountryData {
 
 	var retData []Assignment2.CountryData
@@ -94,6 +123,7 @@ func getOneCountry(data []Assignment2.CountryData, keyword string) []Assignment2
 
 	return retData
 }
+*/
 
 func getNeighborCountry(w http.ResponseWriter, IsoCode string) ([]string, error) {
 	var borderCountries []string
