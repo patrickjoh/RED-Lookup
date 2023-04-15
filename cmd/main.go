@@ -30,6 +30,7 @@ func main() {
 	mux.HandleFunc(Assignment2.STATUS_PATH, handler.HandlerStatus)
 	mux.HandleFunc(Assignment2.CURRENT_PATH, handler.HandlerRenewables)
 
+	// Log that the main application is listening on the specified port
 	log.Println("Main service listening on port " + port)
 	log.Fatal(http.ListenAndServe(":"+port, mux)) // Pass the ServeMux to ListenAndServe
 }
