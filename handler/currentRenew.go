@@ -19,12 +19,10 @@ func HandlerRenewables(w http.ResponseWriter, r *http.Request) {
 			"' is supported.", http.StatusNotImplemented)
 	}
 	return
-
 }
 
 // handleRenewablesGet
 func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
-	// -----------------------------------------------------------------------
 
 	// Split url to get keyword
 	keywords := strings.Split(r.URL.Path, "/") // keywords[4]  'current'
@@ -45,7 +43,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	var countryData []Assignment2.CountryData
 
 	// If country code is provided
-	if len(keywords) >= 5 {
+	if len(keywords) >= 7 {
 		// countryData = getOneCountry(keywords[5], neighbors)
 		log.Println("getOneCountry() not implemented") // TODO
 	} else { // If no country code is provided
@@ -64,7 +62,6 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
-
 	currCount := data[0].Name // Current country
 	currHighYear := 0         // Current highest year
 	var highestRecord Assignment2.CountryData
@@ -83,6 +80,11 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 			retData = append(retData, highestRecord)
 		}
 	}
+
+	for i := 0; i < len(retData); i++ {
+		log.Println(retData[i].Name)
+	}
+
 	return retData
 }
 
