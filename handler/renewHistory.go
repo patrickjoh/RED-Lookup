@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"Assignment2"
 	"encoding/csv"
 	"fmt"
 	"net/http"
@@ -67,12 +68,26 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(error)
 	}
 
+	var countData []Assignment2.HisData
 	for _, col := range records {
 		if col[0] == count && col[2] < end && col[2] > begin {
+			fmt.Println("country found: ")
 			for _, row := range col {
-				fmt.Println(row)
+				fmt.Println(row + " ")
 			}
+			/*
+
+				newHisData := Assignment2.HisData{
+					Name:       col[0],
+					IsoCode:    col[1],
+					Year:       col[2],
+					Percentage: col[3],
+				}
+				countData = append(countData, newHisData)
+
+			*/
 		}
 	}
+	fmt.Println(countData)
 
 }

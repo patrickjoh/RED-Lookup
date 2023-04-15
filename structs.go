@@ -21,3 +21,10 @@ type WebhookData struct {
 	Country   string `json:"country"`
 	Calls     int    `json:"calls"`
 }
+
+type HisData struct {
+	Name       string `json:"name"`
+	IsoCode    string `json:"isoCode"`
+	Year       string `json:"year"`
+	Percentage string `json:"percentage"`
+}
