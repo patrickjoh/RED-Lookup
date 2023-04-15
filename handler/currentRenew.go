@@ -22,8 +22,21 @@ func HandlerRenewables(w http.ResponseWriter, r *http.Request) {
 
 // HandlerRenewablesGet
 func HandlerRenewablesGet(w http.ResponseWriter, r *http.Request) {
-	fd, error := os.Open("renewable-share-energy.csv")
+	// open CSV file
+	fd, error := os.Open("data.csv")
+	if error != nil {
+		fmt.Println(error)
+	}
+	fmt.Println("Successfully opened the CSV file")
+	defer fd.Close()
 
+	// read CSV file
+	fileReader := csv.NewReader(fd)
+	records, error := fileReader.ReadAll()
+	if error != nil {
+		fmt.Println(error)
+	}
+	fmt.Println(records)
 }
 
 // HandlerRenewablesPost
