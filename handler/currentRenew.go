@@ -60,9 +60,8 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
-
 	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
 }
 
 func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
