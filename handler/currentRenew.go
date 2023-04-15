@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"os"
 )
 
 // Documentation...
@@ -19,12 +20,13 @@ func HandlerRenewables(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// HandlerRenewablesPost
-func HandlerRenewablesPost(w http.ResponseWriter, r *http.Request) {
+// HandlerRenewablesGet
+func HandlerRenewablesGet(w http.ResponseWriter, r *http.Request) {
+	fd, error := os.Open("renewable-share-energy.csv")
 
 }
 
-// HandlerRenewablesGet
-func HandlerRenewablesGet(w http.ResponseWriter, r *http.Request) {
+// HandlerRenewablesPost
+func HandlerRenewablesPost(w http.ResponseWriter, r *http.Request) {
 
 }
