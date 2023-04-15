@@ -33,19 +33,23 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*var neighbors = false
+	var neighbors = false
 
 	// If neighbor bool parameter is provided
-	if len(keywords) > 5 {
-		neighbors = true
-	}*/
+	if len(keywords) > 7 {
+		if len(keywords[8]) == 3 {
+			fmt.Println("Length of iso code mus be 3")
+		} else {
+			neighbors = true
+		}
+	}
 
 	var countryData []Assignment2.CountryData
 
 	// If country code is provided
-	if len(keywords) >= 7 {
-		// countryData = getOneCountry(keywords[5], neighbors)
-		log.Println("getOneCountry() not implemented") // TODO
+	if len(keywords) >= 6 {
+		// UWU transform to upper case
+		countryData = getOneCountry(convertCsvData(), keywords[5], neighbors)
 	} else { // If no country code is provided
 		countryData = getAllCountries(convertCsvData())
 	}
@@ -68,11 +72,10 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 	var retData []Assignment2.CountryData
 
 	// Finding entries with the most recent year
-	for i, current := range data {
+	for _, current := range data {
 		if current.Name == currCount { // Still same country?
 			if current.Year > currHighYear { // New highest year found
 				highestRecord = current
-				fmt.Println(i) // UWU remove
 			}
 		} else { // New country entered
 			currCount = current.Name
@@ -81,15 +84,24 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 		}
 	}
 
-	for i := 0; i < len(retData); i++ {
-		log.Println(retData[i].Name)
-	}
-
 	return retData
 }
 
-func getOneCountry(keyword string, neighbor bool) {
+func getOneCountry(data []Assignment2.CountryData, keyword string, neighbor bool) []Assignment2.CountryData {
 
+	var retData []Assignment2.CountryData
+	currHighYear := 0 // Current highest year
+	var highestRecord Assignment2.CountryData
+
+	relCountries := findCountry(data, keyword)
+	for _, current := range relCountries {
+		if current.Year > currHighYear { // New highest year found
+			highestRecord = current
+		}
+	}
+	retData = append(retData, highestRecord)
+
+	return retData
 }
 
 func getNeighborCountry() {
