@@ -54,7 +54,7 @@ func handelStatus(w http.ResponseWriter) {
 	stData := Assignment2.StatusData{
 		Countries_api:   restResp.Status,
 		Notification_db: dataResp.Status,
-		//Webhooks: , //TODO
+		//Webhooks: , // TODO
 		Version: "v1",
 		Uptime:  time.Since(startTime).String(),
 	}
