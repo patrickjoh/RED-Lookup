@@ -36,7 +36,7 @@ func handleStatus(w http.ResponseWriter) {
 	restURL := "http://129.241.150.113:8080/"
 
 	// open CSV file
-	fd, err := os.Open("data/renewable-share-energy-csv.csv")
+	fd, err := os.Open("handler/data/renewable-share-energy.csv")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error opening CSV file: %s", err.Error()), http.StatusInternalServerError)
 		return

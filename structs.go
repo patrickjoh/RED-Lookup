@@ -25,6 +25,6 @@ type WebhookData struct {
 type HisData struct {
 	Name       string `json:"name"`
 	IsoCode    string `json:"isoCode"`
-	Year       string `json:"year"`
+	Year       int    `json:"year"`
 	Percentage string `json:"percentage"`
 }
