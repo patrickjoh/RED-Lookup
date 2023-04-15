@@ -41,7 +41,12 @@ func handleStatus(w http.ResponseWriter) {
 		http.Error(w, fmt.Sprintf("Error opening CSV file: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
-	defer fd.Close()
+	defer func(fd *os.File) {
+		err := fd.Close()
+		if err != nil {
+			fmt.Println("Error closing file: ", err)
+		}
+	}(fd)
 
 	// read CSV file
 	fileReader := csv.NewReader(fd)
