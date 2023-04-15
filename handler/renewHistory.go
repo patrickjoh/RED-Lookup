@@ -60,7 +60,10 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 
-	if begin == "" && end == "" {
+	if begin > end {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if begin == "" && end == "" {
 		begin = "0"
 		end = "3000"
 	} else if begin == "" {
