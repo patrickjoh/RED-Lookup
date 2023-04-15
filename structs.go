@@ -8,10 +8,10 @@ type StatusData struct {
 	Uptime         string `json:"uptime"`
 }
 
-type CountData struct {
+type CountryData struct {
 	Name       string `json:"name"`
 	IsoCode    string `json:"isoCode"`
-	Year       string `json:"year"`
+	Year       int    `json:"year"`
 	Percentage string `json:"percentage"`
 }
 
@@ -20,11 +20,4 @@ type WebhookData struct {
 	Url       string `json:"url"`
 	Country   string `json:"country"`
 	Calls     int    `json:"calls"`
-}
-
-type HisData struct {
-	Name       string `json:"name"`
-	IsoCode    string `json:"isoCode"`
-	Year       int    `json:"year"`
-	Percentage string `json:"percentage"`
 }
