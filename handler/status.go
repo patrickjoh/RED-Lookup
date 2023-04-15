@@ -20,7 +20,7 @@ HandlerStaus: Entry point handler for Status handler
 func HandlerStaus(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		HandelStatus(w, r)
+		handelStatus(w)
 	default:
 		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
 			"' is supported.", http.StatusNotImplemented)
@@ -29,20 +29,32 @@ func HandlerStaus(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandelStatusGet: shows availability for all third party services
-func HandelStatus(w http.ResponseWriter, r *http.Request) {
+func handelStatus(w http.ResponseWriter) {
 	// Define the URLs
-	//url1 := ... // TODO
-	//url2 := ... // TODO
+	restUrl := "http://129.241.150.113:8080/"
+	dataUrl := "https://ourworldindata.org/energy"
 
-	// Instantiate client
-	client := &http.Client{}
-	defer client.CloseIdleConnections()
+	// Make requests using http.Get
+	dataResp, err := http.Get(dataUrl)
+	if err != nil {
+		fmt.Errorf("Error in response: %s", err.Error())
+	}
 
-	// TODO: implement get request
+	// Close response bodies when done
+	defer dataResp.Body.Close()
 
+	restResp, err := http.Get(restUrl)
+	if err != nil {
+		fmt.Errorf("Error in response: %s", err.Error())
+	}
+
+	defer restResp.Body.Close()
+
+	// Get status codes from response structs
 	stData := Assignment2.StatusData{
-		//Countries_api:   ..., // TODO
-		//Notification_db: ..., // TODO
+		Countries_api:   restResp.Status,
+		Notification_db: dataResp.Status,
+		//Webhooks: , //TODO
 		Version: "v1",
 		Uptime:  time.Since(startTime).String(),
 	}
@@ -58,5 +70,4 @@ func HandelStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
 	w.WriteHeader(http.StatusOK)
-
 }
