@@ -28,7 +28,7 @@ func main() {
 	mux.HandleFunc(Assignment2.HISTORY_PATH, handler.HandlerHistory)
 	mux.HandleFunc(Assignment2.NOTIFICATION_PATH, handler.HandlerNotifications)
 	mux.HandleFunc(Assignment2.STATUS_PATH, handler.HandlerStatus)
-	mux.HandleFunc(Assignment2.CURRENT_PATH, handler.HandlerRenewables)
+	mux.HandleFunc(Assignment2.CURRENT_PATH, handler.RenewablesHandler)
 
 	// Log that the main application is listening on the specified port
 	log.Println("Main service listening on port " + port)
