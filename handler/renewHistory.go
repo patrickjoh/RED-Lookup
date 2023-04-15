@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -69,8 +70,12 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var countData []Assignment2.HisData
+	startYear, _ := strconv.Atoi(end)
+	endYear, _ := strconv.Atoi(begin)
+
 	for _, col := range records {
-		if col[0] == count && col[2] < end && col[2] > begin {
+		year, _ := strconv.Atoi(col[2])
+		if col[0] == count && year < endYear && year > startYear {
 			fmt.Println("country found: ")
 			for _, row := range col {
 				fmt.Println(row + " ")
@@ -80,7 +85,7 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 				newHisData := Assignment2.HisData{
 					Name:       col[0],
 					IsoCode:    col[1],
-					Year:       col[2],
+					Year:       year,
 					Percentage: col[3],
 				}
 				countData = append(countData, newHisData)
