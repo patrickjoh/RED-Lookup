@@ -16,7 +16,7 @@ import (
 func HandlerRenewables(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		handelRenewablesGet(w, r)
+		handleRenewablesGet(w, r)
 	default:
 		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
 			"' is supported.", http.StatusNotImplemented)
@@ -25,11 +25,9 @@ func HandlerRenewables(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// handleRenewablesGet
-func handelRenewablesGet(w http.ResponseWriter, r *http.Request) {
-
+func convertCsvData() []Assignment2.CountData {
 	// Open CSV file
-	fd, error := os.Open("handler/data/renewable-share-energy.csv")
+	fd, error := os.Open("/handler/data/renewable-share-energy.csv")
 	if error != nil {
 		fmt.Println(error)
 	}
@@ -43,11 +41,27 @@ func handelRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(error)
 	}
 
+	var csvData []Assignment2.CountData
+	for _, r := range records {
+		if r[1] != "" { // Filtering out continents
+			data := Assignment2.CountData{
+				Name:       r[0],
+				IsoCode:    r[1],
+				Year:       r[2],
+				Percentage: r[3],
+			}
+			csvData = append(csvData, data)
+		}
+	}
+	return csvData
+}
+
+// handleRenewablesGet
+func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	// -----------------------------------------------------------------------
 
 	// Split url to get keyword
-	keywords := strings.Split(r.URL.Path, "/")
-	// keywords[4]  'current'
+	keywords := strings.Split(r.URL.Path, "/") // keywords[4]  'current'
 
 	// Error handling
 	if len(keywords) < 5 || keywords[4] != "current" {
@@ -65,11 +79,11 @@ func handelRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	var countryData []Assignment2.CountData
 
 	// If country code is provided
-	if len(keywords) == 5 {
+	if len(keywords) >= 5 {
 		// countryData = getOneCountry(keywords[5], neighbors)
-		log.Println("getOneCountry() not implemented")
+		log.Println("getOneCountry() not implemented") // TODO
 	} else { // If no country code is provided
-		countryData = getAllCountries(records)
+		countryData = getAllCountries(convertCsvData())
 	}
 
 	jsonResponse, err := json.Marshal(countryData)
@@ -83,39 +97,28 @@ func handelRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getAllCountries(records [][]string) []Assignment2.CountData {
-	var data []Assignment2.CountData
+func getAllCountries(data []Assignment2.CountData) []Assignment2.CountData {
 
-	currCount := records[0][0] // Current country
-	currHighYear := 0          // Current highest year
-	var highestRecord []string
-	var entryIndices [][]string
+	currCount := data[0].Name // Current country
+	currHighYear := 0         // Current highest year
+	var highestRecord Assignment2.CountData
+	var retData []Assignment2.CountData
 
 	// Finding entries with the most recent year
-	for i, record := range records {
-		// UWU check if entry has iso code
-		if record[0] == currCount { // Still same country?
-			year, _ := strconv.Atoi(record[1])
+	for i, current := range data {
+		if current.Name == currCount { // Still same country?
+			year, _ := strconv.Atoi(current.Year)
 			if year > currHighYear { // New highest year found
-				highestRecord = record
-				fmt.Println(i)
+				highestRecord = current
+				fmt.Println(i) // UWU remove
 			}
 		} else { // New country entered
-			currCount = record[0]
-			currHighYear, _ = strconv.Atoi(record[2])
-			entryIndices = append(entryIndices, highestRecord)
+			currCount = current.Name
+			currHighYear, _ = strconv.Atoi(current.Year)
+			retData = append(retData, highestRecord)
 		}
 	}
-
-	/*for i, entry := range entryIndecies {
-		for record := range records {
-			data[i].Name = entry.record[0]
-			data[i].IsoCode = entry.record[1]
-			data[i].Year = entry.record[2]
-			data[i].Percentage = entry.record[3]
-		}
-	}*/
-	return data
+	return retData
 }
 
 func getOneCountry(keyword string, neighbor bool) {
