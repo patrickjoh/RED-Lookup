@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func convertCsvData() []Assignment2.CountryData {
@@ -53,4 +54,21 @@ func convertCsvData() []Assignment2.CountryData {
 	}
 
 	return csvData
+}
+
+// Find all country data based on partial or full name of the country
+func findCountry(countries []Assignment2.CountryData, partialName string) []Assignment2.CountryData {
+	var countData []Assignment2.CountryData // empty list for the final data
+	for _, col := range countries {
+		if strings.Contains(col.Name, partialName) {
+			newHisData := Assignment2.CountryData{
+				Name:       col.Name,
+				IsoCode:    col.IsoCode,
+				Year:       col.Year,
+				Percentage: col.Percentage,
+			}
+			countData = append(countData, newHisData)
+		}
+	}
+	return countData
 }
