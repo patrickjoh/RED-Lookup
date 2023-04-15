@@ -11,11 +11,11 @@ import (
 )
 
 func main() {
-	log.Println("Main service starting...")
 	// Stubbed handler in separate go routine
 	go StubMain.StubMain()
 	time.Sleep(2 * time.Second)
 
+	log.Println("Main service starting...")
 	// Retrieve potential environment variable
 	port := os.Getenv("PORT")
 	if port == "" {
