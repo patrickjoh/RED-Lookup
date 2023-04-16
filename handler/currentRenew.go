@@ -24,8 +24,8 @@ func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 // handleRenewablesGet
 func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 
-	// Split url to get keyword
-	parts := strings.Split(r.URL.Path, "/") // parts[4]  'current'
+	// Remove the trailing slash and split the URL into parts
+	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
 
 	// Error handling
 	if len(parts) < 5 || parts[4] != "current" {
@@ -33,7 +33,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the neighbor parameter from the URL query parameters
+	// Get the neighbour parameter from the URL query parameters
 	neighbourStr := r.URL.Query().Get("neighbours")
 	neighbourBool, err := strconv.ParseBool(neighbourStr)
 	if err != nil && neighbourStr != "" {
@@ -47,8 +47,9 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		neighbourBool = false
 	}
 	var countryData []Assignment2.CountryData
-	// If country code is provided
-	if len(parts) >= 6 {
+
+	// If the country code is provided
+	if len(parts) == 6 {
 		if len(parts[5]) != 3 {
 		} else {
 			var isoCodes []string
@@ -65,8 +66,13 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 			// Fetching data for one country, possibly with neighbors
 			countryData = getOneCountry(convertCsvData(), isoCodes)
 		}
-	} else { // If no country code is provided
+	} else if len(parts) == 5 { // If no country code is provided
 		countryData = getAllCountries(convertCsvData())
+
+	} else { // If the URL is malformed
+		log.Println("Malformed URL")
+		http.Error(w, "Malformed URL", http.StatusBadRequest)
+		return
 	}
 
 	jsonResponse, err := json.Marshal(countryData)
