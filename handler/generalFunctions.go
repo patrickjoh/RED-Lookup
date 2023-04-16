@@ -83,6 +83,9 @@ func findCountry(countries []Assignment2.CountryData, Iso string) []Assignment2.
 	return countryData
 }
 
+/*
+function that gets all countries, decodes them and puts them in a slice. Returns the slice
+*/
 func getCountries(isoCode []string) ([]Assignment2.Country, error) {
 
 	countryUrl := Assignment2.COUNTRYAPI_CODES
@@ -112,9 +115,12 @@ func getCountries(isoCode []string) ([]Assignment2.Country, error) {
 	return countryData, nil
 }
 
-func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.CountryMean {
+/*
+function that gets all countries, checks for redundancy and returns a struct of all countries with mean percentage
+*/
+func getAllCountriesMean() []Assignment2.CountryMean {
 	var retData []Assignment2.CountryMean
-
+	countries := convertCsvData()
 	lastCountry := ""
 	// going through all countries
 	for _, current := range countries {
