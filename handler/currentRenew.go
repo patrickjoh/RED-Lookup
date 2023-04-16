@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -86,27 +87,26 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
-	currCount := data[0].Name // Current country
-	currHighYear := 0         // Current highest year
-	var highestRecord Assignment2.CountryData
-	var retData []Assignment2.CountryData
+	mostRecentData := make(map[string]Assignment2.CountryData)
 
 	// Finding entries with the most recent year
 	for _, current := range data {
-		if current.Name == currCount { // Still same country?
-			if current.Year > currHighYear { // New highest year found
-				highestRecord = current
-				currHighYear = current.Year
-			}
-		} else { // New country entered
-			currCount = current.Name
-			currHighYear = current.Year
-			retData = append(retData, highestRecord)
-			highestRecord = current
+		existingRecord, exists := mostRecentData[current.Name]
+		if !exists || current.Year > existingRecord.Year {
+			mostRecentData[current.Name] = current
 		}
 	}
-	// Appending the last country
-	retData = append(retData, highestRecord)
+
+	var retData []Assignment2.CountryData // Slice to hold the most recent entry for each country
+	for _, record := range mostRecentData {
+		retData = append(retData, record) // Adding the most recent entry for each country to a slice
+	}
+
+	// Sorting the retData slice alphabetically by country name
+	sort.Slice(retData, func(i, j int) bool {
+		return retData[i].Name < retData[j].Name
+	})
+
 	return retData
 }
 
