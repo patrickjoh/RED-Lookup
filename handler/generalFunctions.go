@@ -47,11 +47,15 @@ func convertCsvData() []Assignment2.CountryData {
 		if err != nil {
 			fmt.Println(err)
 		}
+		percentage, err := strconv.ParseFloat(r[3], 64)
+		if err != nil {
+			fmt.Println(err)
+		}
 		data := Assignment2.CountryData{
 			Name:       r[0],
 			IsoCode:    r[1],
 			Year:       year,
-			Percentage: r[3],
+			Percentage: percentage,
 		}
 		csvData = append(csvData, data)
 	}
@@ -106,4 +110,38 @@ func getCountries(isoCode []string) ([]Assignment2.Country, error) {
 	}
 
 	return countryData, nil
+}
+
+func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.CountryMean {
+	var retData []Assignment2.CountryMean
+
+	lastCountry := ""
+	// going through all countries
+	for _, current := range countries {
+		// makes sure there are no repeated countries
+		if current.IsoCode != lastCountry {
+			lastCountry = current.IsoCode
+			// variable that stores mean percentage
+			var mean float64
+			// calls findCountry functions to get all instances of one country
+			countryHistory := findCountry(countries, current.IsoCode)
+			// loops through all instances and adds their percentage to the mean variable
+			for _, currentYear := range countryHistory {
+				mean += currentYear.Percentage
+			}
+			// converts length of countryHistory slice into a float/number of instances
+			numberInstances := float64(len(countryHistory))
+			// calculates mean percentage of a country
+			mean = mean / numberInstances
+			// initiates a country struct with the mean percentage
+			countryMean := Assignment2.CountryMean{
+				Name:       current.Name,
+				IsoCode:    current.IsoCode,
+				Percentage: mean,
+			}
+			// appends country to slice of countries
+			retData = append(retData, countryMean)
+		}
+	}
+	return retData
 }
