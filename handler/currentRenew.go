@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// Method handler for handleRenewablesGet
+// RenewablesHandler handles get requests for current renewables
 func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -22,7 +22,8 @@ func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// handleRenewablesGet
+// handleRenewablesGet calls either getAllCountries or getOneCountry, depending on the parameters
+// provided by the user, to retrieve the most recent renewables percentages for countries.
 func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 
 	// Remove the trailing slash and split the URL into parts
@@ -86,6 +87,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResponse)
 }
 
+// getAllCountries retrieves the most recent entries for all countries.
 func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 	mostRecentData := make(map[string]Assignment2.CountryData)
 
@@ -110,7 +112,9 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 	return retData
 }
 
-// getOneCountry recursively gets countries from a slice of strings containing iso3codes
+// getOneCountry retrieves the latest entries for a given country, and if the neighbours
+// parameter is set to true, it also retrieves the latest entries for the countries
+// that share a border with the given country.
 func getOneCountry(data []Assignment2.CountryData, isoCodes []string) []Assignment2.CountryData {
 	var returnData []Assignment2.CountryData
 	currentHighestYear := 0                         // The currently highest year found
@@ -131,6 +135,9 @@ func getOneCountry(data []Assignment2.CountryData, isoCodes []string) []Assignme
 	return returnData
 }
 
+// getNeighborCountry searches for and returns ISO codes of all countries that share a
+// border with the countries specified by the IsoCode parameter. Bordering countries
+// are returned as a slice of strings containing their ISO codes.
 func getNeighborCountry(w http.ResponseWriter, IsoCode string) ([]string, error) {
 	var borderCountries []string
 	// Get bordering countries data from "REST_Countries" API
