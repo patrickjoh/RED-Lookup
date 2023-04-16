@@ -17,9 +17,9 @@ func init() {
 }
 
 /*
-HandlerStatus: Entry point handler for Status handler
+StatusHandler: Entry point handler for Status handler
 */
-func HandlerStatus(w http.ResponseWriter, r *http.Request) {
+func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		handleStatus(w)

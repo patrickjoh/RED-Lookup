@@ -20,7 +20,7 @@ const collection = "messages"
 // Message counter to produce some variation in content
 var ct = 0
 
-func HandlerNotifications(w http.ResponseWriter, r *http.Request) {
+func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	// Firebase initialisation
 	ctx = context.Background()
 

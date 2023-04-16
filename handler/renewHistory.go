@@ -15,9 +15,9 @@ import (
 func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
-		HandelHistoryPost(w, r)
+		handleHistoryPost(w, r)
 	case http.MethodGet:
-		HandelHistoryGet(w, r)
+		handleHistoryGet(w, r)
 	default:
 		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
 			"' is supported.", http.StatusNotImplemented)
@@ -25,13 +25,13 @@ func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// HandelHistoryPost
-func HandelHistoryPost(w http.ResponseWriter, r *http.Request) {
+// handleHistoryPost
+func handleHistoryPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// HandelHistoryGet
-func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
+// handleHistoryGet
+func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Split url to get keyword
 	urlKeywords := strings.Split(r.URL.Path, "/")
 
