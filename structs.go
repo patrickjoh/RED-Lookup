@@ -9,10 +9,10 @@ type StatusData struct {
 }
 
 type CountryData struct {
-	Name       string `json:"name"`
-	IsoCode    string `json:"isoCode"`
-	Year       int    `json:"year"`
-	Percentage string `json:"percentage"`
+	Name       string  `json:"name"`
+	IsoCode    string  `json:"isoCode"`
+	Year       int     `json:"year"`
+	Percentage float64 `json:"percentage"`
 }
 type CountryMean struct {
 	Name       string  `json:"name"`
