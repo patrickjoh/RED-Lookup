@@ -1,13 +1,22 @@
-package StubMain
+package main
 
 import (
+	"Assignment2"
 	"Assignment2/stub"
 	"log"
 	"net/http"
+	"os"
 )
 
-func StubMain(port string) { // Accept the port number as an argument
+func main() { // Accept the port number as an argument
 	log.Println("Stub service starting...")
+
+	// Retrieve potential environment variable
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Println("$PORT has not been set. Default: " + Assignment2.STUB_PORT)
+		port = Assignment2.STUB_PORT
+	}
 
 	mux := http.NewServeMux()                        // Create a new ServeMux for the stub
 	mux.HandleFunc("/Country/", stub.CountryHandler) // Register the stub handler

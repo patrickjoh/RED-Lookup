@@ -3,18 +3,12 @@ package main
 import (
 	"Assignment2"
 	"Assignment2/handler"
-	"Assignment2/stub/StubMain"
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 func main() {
-	// Stubbed handler in separate go routine
-	go StubMain.StubMain(Assignment2.STUB_PORT) // Pass the port number for the stub as an argument
-	time.Sleep(2 * time.Second)
-
 	log.Println("Main service starting...")
 	// Retrieve potential environment variable
 	port := os.Getenv("PORT")
