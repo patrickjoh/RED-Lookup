@@ -3,10 +3,10 @@ package handler
 import (
 	"Assignment2"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -53,6 +53,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Extract values from the parameters
 	begin := params.Get("begin")
 	end := params.Get("end")
+	sortByValue := params.Get("sortByValue")
 
 	// Error and logic check for beginning and end of year
 	if begin == "" && end == "" {
@@ -66,9 +67,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		log.Println(w, "Incorrect use or year", http.StatusBadRequest)
 		return
 	}
-
-	// Send a response with the extracted values
-	fmt.Fprintf(w, "Searching for: country = %s, year (%s - %s)\n", iso, begin, end)
 
 	var countData []Assignment2.CountryData // Empty list for the final data
 	startYear, _ := strconv.Atoi(begin)     // Convert beginning year to int
@@ -90,6 +88,13 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 			}
 			countData = append(countData, newHisData)
 		}
+	}
+	// if user want to sort by percentage
+	if sortByValue == "true" {
+		// Sorting the countData slice from lowest to highest by country percentage
+		sort.Slice(countData, func(i, j int) bool {
+			return countData[i].Percentage < countData[j].Percentage
+		})
 	}
 
 	// if no Iso is given print all countries mean percentage else print one country's history
