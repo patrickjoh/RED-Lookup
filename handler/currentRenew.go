@@ -101,49 +101,25 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 }
 
 // getOneCountry recursively gets countries from a slice of strings containing iso3codes
-func getOneCountry(data []Assignment2.CountryData, keywords []string) []Assignment2.CountryData {
-	var retData []Assignment2.CountryData
-	currHighYear := 0 // Current highest year
-	var highestRecord Assignment2.CountryData
+func getOneCountry(data []Assignment2.CountryData, isoCodes []string) []Assignment2.CountryData {
+	var returnData []Assignment2.CountryData
+	currentHighestYear := 0                         // The currently highest year found
+	var currentHighestEntry Assignment2.CountryData // The struct with the currently highest year
 
-	relCountries := findCountry(data, keywords[len(keywords)-1])
-	for _, current := range relCountries {
-		if current.Year > currHighYear { // New highest year found
-			highestRecord = current
-			currHighYear = current.Year
+	for _, iso := range isoCodes {
+		relCountries := findCountry(data, iso)
+		for _, current := range relCountries {
+			if current.Year > currentHighestYear { // New highest year found
+				currentHighestEntry = current
+				currentHighestYear = current.Year
+			}
 		}
+		returnData = append(returnData, currentHighestEntry)
+		currentHighestYear = 0
 	}
 
-	// Creating new keyword list for next iteration
-	newKeywords := keywords[:len(keywords)-1]
-	retData = append(retData, highestRecord)
-
-	// Potentially appending remaining neighboring countries recursively
-	if len(newKeywords) > 0 {
-		remainingData := getOneCountry(data, newKeywords)
-		retData = append(retData, remainingData...)
-	}
-	return retData
+	return returnData
 }
-
-/*	NON RECURSIVE IMPLEMENTATION
-func getOneCountry(data []Assignment2.CountryData, keyword string) []Assignment2.CountryData {
-
-	var retData []Assignment2.CountryData
-	currHighYear := 0 // Current highest year
-	var highestRecord Assignment2.CountryData
-
-	relCountries := findCountry(data, keyword)
-	for _, current := range relCountries {
-		if current.Year > currHighYear { // New highest year found
-			highestRecord = current
-		}
-	}
-	retData = append(retData, highestRecord)
-
-	return retData
-}
-*/
 
 func getNeighborCountry(w http.ResponseWriter, IsoCode string) ([]string, error) {
 	var borderCountries []string
