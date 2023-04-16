@@ -12,7 +12,7 @@ import (
 
 func main() {
 	// Stubbed handler in separate go routine
-	go StubMain.StubMain("6969") // Pass the port number for the stub as an argument
+	go StubMain.StubMain(Assignment2.STUB_PORT) // Pass the port number for the stub as an argument
 	time.Sleep(2 * time.Second)
 
 	log.Println("Main service starting...")
