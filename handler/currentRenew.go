@@ -3,7 +3,6 @@ package handler
 import (
 	"Assignment2"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -34,7 +33,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the limit parameter from the URL query parameters
+	// Get the neighbor parameter from the URL query parameters
 	neighbourStr := r.URL.Query().Get("neighbours")
 	neighbourBool, err := strconv.ParseBool(neighbourStr)
 	if err != nil && neighbourStr != "" {
@@ -48,12 +47,10 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	if neighbourStr != "" {
 		neighbourBool = true
 	}
-
 	var countryData []Assignment2.CountryData
 	// If country code is provided
 	if len(keywords) >= 6 {
-		if len(keywords[8]) == 3 {
-			fmt.Println("Length of iso code mus be 3")
+		if len(keywords[5]) != 3 {
 		} else {
 			var isoCodes []string
 			isoCodes = append(isoCodes, keywords[5])
@@ -61,13 +58,12 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 				bordering, err := getNeighborCountry(w, keywords[5])
 				if err != nil {
 					log.Fatal(err)
-				}
+				} // Adding ISO codes for neighboring countries to list
 				for _, borders := range bordering {
 					isoCodes = append(isoCodes, borders)
 				}
-
 			}
-
+			// Fetching data for one country, possibly with neighbors
 			countryData = getOneCountry(convertCsvData(), isoCodes)
 		}
 	} else { // If no country code is provided
@@ -102,7 +98,6 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 			retData = append(retData, highestRecord)
 		}
 	}
-
 	return retData
 }
 
@@ -124,9 +119,10 @@ func getOneCountry(data []Assignment2.CountryData, keywords []string) []Assignme
 	retData = append(retData, highestRecord)
 
 	// Potentially appending remaining neighboring countries recursively
-	if len(keywords) > 0 {
+	if len(newKeywords) > 0 {
 		retData = getOneCountry(data, newKeywords)
 	}
+
 	return retData
 }
 
