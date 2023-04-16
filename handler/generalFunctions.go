@@ -118,9 +118,8 @@ func getCountries(isoCode []string) ([]Assignment2.Country, error) {
 /*
 function that gets all countries, checks for redundancy and returns a struct of all countries with mean percentage
 */
-func getAllCountriesMean() []Assignment2.CountryMean {
+func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.CountryMean {
 	var retData []Assignment2.CountryMean
-	countries := convertCsvData()
 	lastCountry := ""
 	// going through all countries
 	for _, current := range countries {
