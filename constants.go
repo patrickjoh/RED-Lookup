@@ -8,7 +8,9 @@ const (
 	NOTIFICATION_PATH = "/energy/v1/notifications/"
 	STATUS_PATH       = "/energy/v1/status/"
 	DEFAULT_PORT      = "8080"
-	STUB_PORT         = "6969"
+	STUB_PORT         = "8081"
 	CSV_PATH          = "handler/data/renewable-share-energy.csv"
 	COUNTRYAPI_CODES  = "http://129.241.150.113:8080/v3.1/alpha?codes="
+	//STUB_COUNTRY      = "http://localhost:8081/Country/" // Stubbed handler for country data
+	//STUB_NEIGHBOURS   = "http://localhost:8081/Neighbour/" // Stubbed handler for neighbour data
 )
