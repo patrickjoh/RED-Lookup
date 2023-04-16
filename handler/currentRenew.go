@@ -25,10 +25,10 @@ func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 
 	// Split url to get keyword
-	keywords := strings.Split(r.URL.Path, "/") // keywords[4]  'current'
+	parts := strings.Split(r.URL.Path, "/") // parts[4]  'current'
 
 	// Error handling
-	if len(keywords) < 5 || keywords[4] != "current" {
+	if len(parts) < 5 || parts[4] != "current" {
 		log.Println(w, "Malformed URL", http.StatusBadRequest)
 		return
 	}
@@ -41,21 +41,20 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 		log.Println("Invalid neighbours parameter")
 		return
 	}
-	// Set the default value of neighbourBool to false
-	neighbourBool = false
+
 	// If neighbourStr is empty, neighbourBool is false
-	if neighbourStr != "" {
-		neighbourBool = true
+	if neighbourStr == "" {
+		neighbourBool = false
 	}
 	var countryData []Assignment2.CountryData
 	// If country code is provided
-	if len(keywords) >= 6 {
-		if len(keywords[5]) != 3 {
+	if len(parts) >= 6 {
+		if len(parts[5]) != 3 {
 		} else {
 			var isoCodes []string
-			isoCodes = append(isoCodes, keywords[5])
+			isoCodes = append(isoCodes, parts[5])
 			if neighbourBool {
-				bordering, err := getNeighborCountry(w, keywords[5])
+				bordering, err := getNeighborCountry(w, parts[5])
 				if err != nil {
 					log.Fatal(err)
 				} // Adding ISO codes for neighboring countries to list
