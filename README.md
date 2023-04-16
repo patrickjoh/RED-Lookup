@@ -232,6 +232,7 @@ The renewable energy data set is retrieved from: https://ourworldindata.org/ener
 - cloud.google.com/go/firestore v1.9.0
 - firebase.google.com/go v3.13.0+incompatible
 - google.golang.org/api v0.118.0
+- github.com/stretchr/testify/assert
 
 ## Contributors
 ### Developers

@@ -6,47 +6,42 @@ import (
 	"testing"
 )
 
-func TestGetAllCountries(t *testing.T) {
-	// Sample data
-	data := []Assignment2.CountryData{
-		{Name: "Country1", Year: 2000, IsoCode: "20", Percentage: 1.5},
-		{Name: "Country1", Year: 2005, IsoCode: "20", Percentage: 54.2},
-		{Name: "Country2", Year: 2000, IsoCode: "40", Percentage: 13.2},
-		{Name: "Country2", Year: 2010, IsoCode: "40", Percentage: 42.2},
-		{Name: "Country3", Year: 2010, IsoCode: "50", Percentage: 99.1},
-	}
+// Sample data for test functions
+var sampleData = []Assignment2.CountryData{
+	{Name: "Azerbajan", IsoCode: "AZE", Year: 2000, Percentage: 1.5},
+	{Name: "Azerbajan", IsoCode: "AZE", Year: 2021, Percentage: 54.2},
+	{Name: "Germany", IsoCode: "DEU", Year: 2000, Percentage: 13.2},
+	{Name: "Germany", IsoCode: "DEU", Year: 2021, Percentage: 42.2},
+	{Name: "Thailand", IsoCode: "THA", Year: 2021, Percentage: 99.1},
+	{Name: "Chad", IsoCode: "TCD", Year: 2021, Percentage: 99.1},
+}
 
+// TestGetAllCountries tests the getAllCountries function*/
+func TestGetAllCountries(t *testing.T) {
 	// Expected output
 	expected := []Assignment2.CountryData{
-		{Name: "Country1", Year: 2005, IsoCode: "20", Percentage: 54.2},
-		{Name: "Country2", Year: 2010, IsoCode: "40", Percentage: 42.2},
-		{Name: "Country3", Year: 2010, IsoCode: "50", Percentage: 99.1},
+		{Name: "Azerbajan", IsoCode: "AZE", Year: 2021, Percentage: 54.2},
+		{Name: "Germany", IsoCode: "DEU", Year: 2021, Percentage: 42.2},
+		{Name: "Thailand", IsoCode: "THA", Year: 2021, Percentage: 99.1},
+		{Name: "Chad", IsoCode: "TCD", Year: 2021, Percentage: 99.1},
 	}
 
-	result := getAllCountries(data)
+	result := getAllCountries(sampleData)
 
 	assert.Equal(t, expected, result)
 }
 
+// TestGetOneCountry tests the getOneCountry function
 func TestGetOneCountry(t *testing.T) {
-	// Sample data
-	data := []Assignment2.CountryData{
-		{Name: "Country1", Year: 2000, IsoCode: "20", Percentage: 1.5},
-		{Name: "Country1", Year: 2005, IsoCode: "20", Percentage: 54.2},
-		{Name: "Country2", Year: 2000, IsoCode: "40", Percentage: 13.2},
-		{Name: "Country2", Year: 2010, IsoCode: "40", Percentage: 42.2},
-		{Name: "Country3", Year: 2010, IsoCode: "50", Percentage: 99.1},
-	}
-
 	// Expected output
 	expected := []Assignment2.CountryData{
-		{Name: "Country1", Year: 2005, IsoCode: "20", Percentage: 54.2},
-		{Name: "Country2", Year: 2010, IsoCode: "40", Percentage: 42.2},
+		{Name: "Azerbajan", Year: 2021, IsoCode: "AZE", Percentage: 54.2},
+		{Name: "Germany", Year: 2021, IsoCode: "DEU", Percentage: 42.2},
 	}
 
-	isoCodes := []string{"20", "40"}
+	isoCodes := []string{"AZE", "DEU"}
 
-	result := getOneCountry(data, isoCodes)
+	result := getOneCountry(sampleData, isoCodes)
 
 	assert.Equal(t, expected, result)
 }

@@ -96,13 +96,17 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 		if current.Name == currCount { // Still same country?
 			if current.Year > currHighYear { // New highest year found
 				highestRecord = current
+				currHighYear = current.Year
 			}
 		} else { // New country entered
 			currCount = current.Name
 			currHighYear = current.Year
 			retData = append(retData, highestRecord)
+			highestRecord = current
 		}
 	}
+	// Appending the last country
+	retData = append(retData, highestRecord)
 	return retData
 }
 
