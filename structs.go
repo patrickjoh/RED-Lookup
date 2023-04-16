@@ -14,6 +14,11 @@ type CountryData struct {
 	Year       int    `json:"year"`
 	Percentage string `json:"percentage"`
 }
+type CountryMean struct {
+	Name       string  `json:"name"`
+	IsoCode    string  `json:"isoCode"`
+	Percentage float64 `json:"percentage"`
+}
 
 type WebhookData struct {
 	WebhookID string `json:"webhook_id"`
