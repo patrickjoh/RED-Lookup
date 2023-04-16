@@ -12,7 +12,7 @@ import (
 
 func main() {
 	// Stubbed handler in separate go routine
-	go StubMain.StubMain("6969") // Pass the port number for the stub as an argument
+	go StubMain.StubMain(Assignment2.STUB_PORT) // Pass the port number for the stub as an argument
 	time.Sleep(2 * time.Second)
 
 	log.Println("Main service starting...")
@@ -26,8 +26,8 @@ func main() {
 	mux := http.NewServeMux() // Create a new ServeMux for the main application
 	mux.HandleFunc(Assignment2.DEFAULT_PATH, handler.EmptyHandler)
 	mux.HandleFunc(Assignment2.HISTORY_PATH, handler.HistoryHandler)
-	mux.HandleFunc(Assignment2.NOTIFICATION_PATH, handler.HandlerNotifications)
-	mux.HandleFunc(Assignment2.STATUS_PATH, handler.HandlerStatus)
+	mux.HandleFunc(Assignment2.NOTIFICATION_PATH, handler.NotificationsHandler)
+	mux.HandleFunc(Assignment2.STATUS_PATH, handler.StatusHandler)
 	mux.HandleFunc(Assignment2.CURRENT_PATH, handler.RenewablesHandler)
 
 	// Log that the main application is listening on the specified port
