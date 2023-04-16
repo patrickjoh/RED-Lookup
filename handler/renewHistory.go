@@ -66,9 +66,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		end = begin
 	}
 
-	// Send a response with the extracted values
-	fmt.Fprintf(w, "Searching for: country = %s, year (%s - %s)\n", iso, begin, end)
-
 	if iso == "" {
 		var countMean []Assignment2.CountryMean // empty list for the final data
 		countMean = getAllCountriesMean()
