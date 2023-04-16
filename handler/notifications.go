@@ -19,9 +19,6 @@ const collection = "messages"
 // Message counter to produce some variation in content
 var ct = 0
 
-// HandlerStudent main handler for route related to `/students` requests
-// Note: here we are using a higher-order function with closure, to propagate a reference
-// to the DB down the processing pipeline.
 func HandlerNotifications(w http.ResponseWriter, r *http.Request) {
 	// Firebase initialisation
 	ctx = context.Background()
