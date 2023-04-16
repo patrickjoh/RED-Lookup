@@ -31,6 +31,8 @@ func initFirebase() {
 	}
 
 	client, err = app.Firestore(ctx)
+
+	// Check whether there is an error when connecting to Firestore
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -73,5 +75,12 @@ func handleNotificationsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleNotificationsDelete(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func postPayload(payload interface{}) {
+
+}
+func retrieveDocument(id string) {
 
 }
