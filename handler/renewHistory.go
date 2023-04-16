@@ -37,7 +37,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 
 	iso := urlKeywords[5]   // Get country isoCode from url
 	query := r.URL.RawQuery // Get the queries from url
-	fmt.Println(len(iso))
+
 	if len(iso) != 3 && len(iso) != 0 {
 		log.Println(w, "Malformed URL", http.StatusBadRequest)
 		return
@@ -54,26 +54,47 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 
-	if begin > end {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if begin == "" && end == "" {
+	// Error and logic check for beginning and end of year
+	if begin == "" && end == "" {
 		begin = "0"
 		end = "3000"
-	} else if begin == "" {
-		begin = end
 	} else if end == "" {
 		end = begin
+	} else if begin == "" {
+		begin = end
+	} else if begin > end {
+		log.Println(w, "Incorrect use or year", http.StatusBadRequest)
+		return
 	}
 
 	// Send a response with the extracted values
 	fmt.Fprintf(w, "Searching for: country = %s, year (%s - %s)\n", iso, begin, end)
 
-	if iso == "" {
-		var countMean []Assignment2.CountryMean // empty list for the final data
-		countMean = getAllCountriesMean()
+	var countData []Assignment2.CountryData // Empty list for the final data
+	startYear, _ := strconv.Atoi(begin)     // Convert beginning year to int
+	endYear, _ := strconv.Atoi(end)         // Convert end year to int
+	countryIterators := convertCsvData()    // Read all countries data from csv
 
-		fmt.Println(countMean)
+	// if Iso Code is given only one country's data is checked
+	if iso != "" {
+		countryIterators = findCountry(countryIterators, iso) // splice of one country's history
+	}
+	// Find country's history from beginning to end
+	for _, col := range countryIterators {
+		if col.Year <= endYear && col.Year >= startYear {
+			newHisData := Assignment2.CountryData{
+				Name:       col.Name,
+				IsoCode:    col.IsoCode,
+				Year:       col.Year,
+				Percentage: col.Percentage,
+			}
+			countData = append(countData, newHisData)
+		}
+	}
+
+	// if no Iso is given print all countries mean percentage else print one country's history
+	if iso == "" {
+		countMean := getAllCountriesMean(countData) // get all countries mean percentage
 
 		jsonResponse, err := json.Marshal(countMean)
 		if err != nil {
@@ -83,25 +104,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonResponse)
 	} else {
-		var countData []Assignment2.CountryData       // empty list for the final data
-		startYear, _ := strconv.Atoi(begin)           // beginning year
-		endYear, _ := strconv.Atoi(end)               // end year
-		country := findCountry(convertCsvData(), iso) // Acquire data from csv-file
-		// loops through the csv-file and return the data that was asked for
-		for _, col := range country {
-			if col.Year <= endYear && col.Year >= startYear {
-				newHisData := Assignment2.CountryData{
-					Name:       col.Name,
-					IsoCode:    col.IsoCode,
-					Year:       col.Year,
-					Percentage: col.Percentage,
-				}
-				countData = append(countData, newHisData)
-			}
-		}
-
-		fmt.Println(countData)
-
 		jsonResponse, err := json.Marshal(countData)
 		if err != nil {
 			log.Fatal(err)
