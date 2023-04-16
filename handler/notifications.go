@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"Assignment2"
 	"cloud.google.com/go/firestore"
 	"context"
 	firebase "firebase.google.com/go"
@@ -23,7 +24,7 @@ var ct = 0
 func initFirebase() {
 	ctx = context.Background()
 
-	sa := option.WithCredentialsFile("assignment2-group11-firebase-adminsdk-lo4w1-716a00f3f5.json")
+	sa := option.WithCredentialsFile(Assignment2.FIRESTORE_CREDS)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
