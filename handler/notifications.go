@@ -50,19 +50,19 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPost:
-		handleNotificationsPost(w, r)
+		handleWebhooksPost(w, r)
 	case http.MethodGet:
-		handleNotificationsGet(w, r)
+		handleWebhooksGet(w, r)
 	case http.MethodDelete:
-		handleNotificationsDelete(w, r)
+		handleWebhooksDelete(w, r)
 	}
 }
 
-func handleNotificationsPost(w http.ResponseWriter, r *http.Request) {
+func handleWebhooksPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func handleNotificationsGet(w http.ResponseWriter, r *http.Request) {
+func handleWebhooksGet(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
 
 	if len(parts) == 4 {
@@ -74,7 +74,7 @@ func handleNotificationsGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleNotificationsDelete(w http.ResponseWriter, r *http.Request) {
+func handleWebhooksDelete(w http.ResponseWriter, r *http.Request) {
 
 }
 
