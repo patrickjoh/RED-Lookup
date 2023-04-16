@@ -7,6 +7,7 @@ import (
 	"google.golang.org/api/option"
 	"log"
 	"net/http"
+	"strings"
 )
 
 // Firebase context and client used by Firestore functions throughout the program.
@@ -53,6 +54,8 @@ func HandlerNotifications(w http.ResponseWriter, r *http.Request) {
 		handleNotificationsPost(w, r)
 	case http.MethodGet:
 		handleNotificationsGet(w, r)
+	case http.MethodDelete:
+		handleNotificationsDelete(w, r)
 	}
 }
 
@@ -63,5 +66,20 @@ func handleNotificationsPost(w http.ResponseWriter, r *http.Request) {
 
 // handleNotificationsGet utility function, package level, to handle GET request to student route
 func handleNotificationsGet(w http.ResponseWriter, r *http.Request) {
+	// Remove the trailing slash and split the URL into parts
+	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
+
+	// Create webhook
+	if len(parts) == 4 {
+		// ...
+	} else if len(parts) == 5 { // View webook
+		// Get {id} or something idk
+	} else {
+		// some fucking error
+	}
+}
+
+// handleNotificationsDelete utility function, package level, to handle GET request to student route
+func handleNotificationsDelete(w http.ResponseWriter, r *http.Request) {
 
 }
