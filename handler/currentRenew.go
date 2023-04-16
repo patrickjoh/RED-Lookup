@@ -110,6 +110,7 @@ func getOneCountry(data []Assignment2.CountryData, keywords []string) []Assignme
 	for _, current := range relCountries {
 		if current.Year > currHighYear { // New highest year found
 			highestRecord = current
+			currHighYear = current.Year
 		}
 	}
 
@@ -119,9 +120,9 @@ func getOneCountry(data []Assignment2.CountryData, keywords []string) []Assignme
 
 	// Potentially appending remaining neighboring countries recursively
 	if len(newKeywords) > 0 {
-		retData = getOneCountry(data, newKeywords)
+		remainingData := getOneCountry(data, newKeywords)
+		retData = append(retData, remainingData...)
 	}
-
 	return retData
 }
 
