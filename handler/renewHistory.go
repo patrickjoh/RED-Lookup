@@ -71,7 +71,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 
 	if iso == "" {
 		var countMean []Assignment2.CountryMean // empty list for the final data
-		countMean = getAllCountriesMean(convertCsvData())
+		countMean = getAllCountriesMean()
 
 		fmt.Println(countMean)
 
