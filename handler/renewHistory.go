@@ -35,16 +35,10 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Split url to get keyword
 	urlKeywords := strings.Split(r.URL.Path, "/")
 
-	// Error handling
-	if len(urlKeywords) < 5 {
-		log.Println(w, "Malformed URL", http.StatusBadRequest)
-		return
-	}
-
 	iso := urlKeywords[5]   // Get country isoCode from url
 	query := r.URL.RawQuery // Get the queries from url
-
-	if len(iso) != 3 {
+	fmt.Println(len(iso))
+	if len(iso) != 3 && len(iso) != 0 {
 		log.Println(w, "Malformed URL", http.StatusBadRequest)
 		return
 	}
@@ -73,38 +67,47 @@ func HandelHistoryGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send a response with the extracted values
-	fmt.Fprintf(w, "Searching for: country = %s, year (%s - %s)", iso, begin, end)
+	fmt.Fprintf(w, "Searching for: country = %s, year (%s - %s)\n", iso, begin, end)
 
-	country := findCountry(convertCsvData(), iso) // Acquire data from csv-file
+	if iso == "" {
+		var countMean []Assignment2.CountryMean // empty list for the final data
+		countMean = getAllCountriesMean(convertCsvData())
 
-	var countData []Assignment2.CountryData // empty list for the final data
-	startYear, _ := strconv.Atoi(begin)     // beginning year
-	endYear, _ := strconv.Atoi(end)         // end year
+		fmt.Println(countMean)
 
-	for _, no := range country {
-		fmt.Println(no.Name)
-	}
-
-	// loops through the csv-file and return the data that was asked for
-	for _, col := range country {
-		if col.Year <= endYear && col.Year >= startYear {
-			newHisData := Assignment2.CountryData{
-				Name:       col.Name,
-				IsoCode:    col.IsoCode,
-				Year:       col.Year,
-				Percentage: col.Percentage,
-			}
-			countData = append(countData, newHisData)
+		jsonResponse, err := json.Marshal(countMean)
+		if err != nil {
+			log.Fatal(err)
 		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponse)
+	} else {
+		var countData []Assignment2.CountryData       // empty list for the final data
+		startYear, _ := strconv.Atoi(begin)           // beginning year
+		endYear, _ := strconv.Atoi(end)               // end year
+		country := findCountry(convertCsvData(), iso) // Acquire data from csv-file
+		// loops through the csv-file and return the data that was asked for
+		for _, col := range country {
+			if col.Year <= endYear && col.Year >= startYear {
+				newHisData := Assignment2.CountryData{
+					Name:       col.Name,
+					IsoCode:    col.IsoCode,
+					Year:       col.Year,
+					Percentage: col.Percentage,
+				}
+				countData = append(countData, newHisData)
+			}
+		}
+
+		fmt.Println(countData)
+
+		jsonResponse, err := json.Marshal(countData)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponse)
 	}
-	fmt.Println(countData)
-
-	jsonResponse, err := json.Marshal(countData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
-
 }
