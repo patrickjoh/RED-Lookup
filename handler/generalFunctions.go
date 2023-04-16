@@ -61,7 +61,7 @@ func convertCsvData() []Assignment2.CountryData {
 
 // Find all country data for a given ISO code
 func findCountry(countries []Assignment2.CountryData, Iso string) []Assignment2.CountryData {
-	var countData []Assignment2.CountryData // empty list for the final data
+	var countryData []Assignment2.CountryData // empty list for the final data
 
 	// Convert to upper case to avoid case sensitivity
 	Iso = strings.ToUpper(Iso)
@@ -73,10 +73,10 @@ func findCountry(countries []Assignment2.CountryData, Iso string) []Assignment2.
 				Year:       col.Year,
 				Percentage: col.Percentage,
 			}
-			countData = append(countData, newHisData)
+			countryData = append(countryData, newHisData)
 		}
 	}
-	return countData
+	return countryData
 }
 
 func getCountries(isoCode []string) ([]Assignment2.Country, error) {
