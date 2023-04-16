@@ -12,11 +12,11 @@ type Country struct {
 	Code string `json:"code"`
 }
 
-func HandlerStub(w http.ResponseWriter, r *http.Request) {
+func CountryHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// If the request is a GET, then call the stubHandler
 	case http.MethodGet:
-		stubHandler(w)
+		handlerCountry(w)
 	default:
 		// Otherwise, return an error
 		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
@@ -26,12 +26,12 @@ func HandlerStub(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func stubHandler(w http.ResponseWriter) {
+func handlerCountry(w http.ResponseWriter) {
 	// Set the content type to JSON
 	w.Header().Set("Content-Type", "application/json")
 
 	// Parse the JSON file
-	output := parseFile("stub/res/RESTCountry.json")
+	output := parseFile("stub/res/NOR_Country.json")
 
 	// Finally, let's write the JSON to the response
 	w.Write(output)
