@@ -5,6 +5,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	firebase "firebase.google.com/go"
+	"firebase.google.com/go/db"
 	"google.golang.org/api/option"
 	"log"
 	"net/http"
@@ -81,6 +82,20 @@ func handleNotificationsDelete(w http.ResponseWriter, r *http.Request) {
 func postPayload(payload interface{}) {
 
 }
+
 func retrieveDocument(id string) {
 
+}
+
+// GetNumWebhooks retrieves and returns the number of registered webhooks from firebase
+func GetNumWebhooks(ctx context.Context, client *db.Client) (int, error) {
+	// Create reference to webhook node in firebase
+	ref := client.NewRef("webhooks")
+	// Retrieve all webhooks
+	snap, err := ref.OrderByKey().GetOrdered(ctx)
+	if err != nil {
+		return 0, err
+	}
+	numWebhooks := len(snap)
+	return numWebhooks, nil
 }
