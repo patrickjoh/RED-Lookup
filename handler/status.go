@@ -67,11 +67,11 @@ func handleStatus(w http.ResponseWriter) {
 
 	// Get status codes from response structs
 	stData := Assignment2.StatusData{
-		CountriesAPI: restResp.Status,
-		//NotificationDB:
-		Webhooks: GetNumWebhooks(),
-		Version:  "v1",
-		Uptime:   time.Since(startTime).String(),
+		CountriesAPI:   restResp.Status,
+		NotificationSB: firestoreStatus(),
+		Webhooks:       GetNumWebhooks(),
+		Version:        "v1",
+		Uptime:         time.Since(startTime).String(),
 	}
 
 	// Encode struct as JSON
@@ -85,4 +85,29 @@ func handleStatus(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+}
+
+// firestoreStatus checks availability of Firestore db and returns status code
+func firestoreStatus() int {
+	ctx, client := GetContextAndClient()
+
+	// Retrieve list of all collections in the Firestore database
+	collections, err := client.Collections(ctx).GetAll()
+	if err != nil {
+		// Firestore is unavailable
+		return http.StatusServiceUnavailable
+	}
+
+	// Attempt to get document from any collection in Firestore
+	for _, collectionRef := range collections {
+		iter := collectionRef.Limit(1).Documents(ctx)
+		_, err := iter.Next()
+		if err == nil {
+			// Return a status code indicating that Firestore service is available
+			return http.StatusOK
+		}
+	}
+
+	// Return error status code if no document found
+	return http.StatusServiceUnavailable
 }
