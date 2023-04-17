@@ -39,6 +39,11 @@ func initFirebase() {
 	}
 }
 
+// GetContextAndClient returns the Firebase context and client to functions which require their use
+func GetContextAndClient() (context.Context, *firestore.Client) {
+	return ctx, client
+}
+
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	initFirebase()
 
@@ -89,19 +94,8 @@ func retrieveDocument(id string) {
 
 // GetNumWebhooks retrieves and returns the number of registered webhooks from Firestore
 func GetNumWebhooks() int {
-	// Set up Firebase app
-	opt := option.WithCredentialsFile("path/to/your/firebase/serviceAccountKey.json")
-	app, err := firebase.NewApp(context.Background(), nil, opt)
-	if err != nil {
-		panic(err)
-	}
-
-	// Initialize Firestore client
-	client, err := app.Firestore(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
+	// Get context and client
+	ctx, client = GetContextAndClient()
 
 	// Create reference to webhook collection in Firestore
 	webhooksCollection := client.Collection("webhooks")
