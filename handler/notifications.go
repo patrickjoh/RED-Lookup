@@ -91,11 +91,13 @@ func retrieveDocument(id string) {
 func GetNumWebhooks(ctx context.Context, client *db.Client) (int, error) {
 	// Create reference to webhook node in firebase
 	ref := client.NewRef("webhooks")
+
 	// Retrieve all webhooks
 	snap, err := ref.OrderByKey().GetOrdered(ctx)
 	if err != nil {
 		return 0, err
 	}
+
 	numWebhooks := len(snap)
 	return numWebhooks, nil
 }
