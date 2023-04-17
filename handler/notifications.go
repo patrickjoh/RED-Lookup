@@ -5,7 +5,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	firebase "firebase.google.com/go"
-	"firebase.google.com/go/db"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"log"
 	"net/http"
@@ -87,17 +87,39 @@ func retrieveDocument(id string) {
 
 }
 
-// GetNumWebhooks retrieves and returns the number of registered webhooks from firebase
-func GetNumWebhooks(ctx context.Context, client *db.Client) (int, error) {
-	// Create reference to webhook node in firebase
-	ref := client.NewRef("webhooks")
+// GetNumWebhooks retrieves and returns the number of registered webhooks from Firestore
+func GetNumWebhooks() (int, error) {
 
-	// Retrieve all webhooks
-	snap, err := ref.OrderByKey().GetOrdered(ctx)
+	// Set up Firebase app
+	opt := option.WithCredentialsFile(Assignment2.FIRESTORE_CREDS)
+	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		return 0, err
 	}
 
-	numWebhooks := len(snap)
+	// Initialize Firestore client
+	client, err := app.Firestore(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	defer client.Close()
+
+	// Create reference to webhook collection in Firestore
+	webhooksCollection := client.Collection("webhooks")
+
+	// Retrieve all webhooks
+	iter := webhooksCollection.Documents(context.Background())
+	var numWebhooks int
+	for {
+		_, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return 0, err
+		}
+		numWebhooks++
+	}
+
 	return numWebhooks, nil
 }
