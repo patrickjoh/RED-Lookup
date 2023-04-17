@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"google.golang.org/api/iterator"
 	"net/http"
 	"os"
 	"time"
@@ -67,11 +68,11 @@ func handleStatus(w http.ResponseWriter) {
 
 	// Get status codes from response structs
 	stData := Assignment2.StatusData{
-		CountriesAPI: restResp.Status,
-		//NotificationDB:
-		//Webhooks: , // TODO
-		Version: "v1",
-		Uptime:  time.Since(startTime).String(),
+		CountriesAPI:   restResp.Status,
+		NotificationSB: firestoreStatus(),
+		Webhooks:       GetNumWebhooks(),
+		Version:        "v1",
+		Uptime:         time.Since(startTime).String(),
 	}
 
 	// Encode struct as JSON
@@ -85,4 +86,54 @@ func handleStatus(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+}
+
+// firestoreStatus checks availability of Firestore db and returns status code
+func firestoreStatus() int {
+	ctx, client := GetContextAndClient()
+
+	// Retrieve list of all collections in the Firestore database
+	collections, err := client.Collections(ctx).GetAll()
+	if err != nil {
+		// Firestore is unavailable
+		return http.StatusServiceUnavailable
+	}
+
+	// Attempt to get document from any collection in Firestore
+	for _, collectionRef := range collections {
+		iter := collectionRef.Limit(1).Documents(ctx)
+		_, err := iter.Next()
+		if err == nil {
+			// Return a status code indicating that Firestore service is available
+			return http.StatusOK
+		}
+	}
+
+	// Return error status code if no document found
+	return http.StatusServiceUnavailable
+}
+
+// GetNumWebhooks retrieves and returns the number of registered webhooks from Firestore
+func GetNumWebhooks() int {
+	// Get context and client
+	ctx, client = GetContextAndClient()
+
+	// Create reference to webhook collection in Firestore
+	webhooksCollection := client.Collection("webhooks")
+
+	// Retrieve all webhooks from db
+	iter := webhooksCollection.Documents(ctx)
+	var numWebhooks int
+	for {
+		_, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+		numWebhooks++
+	}
+
+	return numWebhooks
 }
