@@ -2,10 +2,11 @@ package handler
 
 import (
 	"Assignment2"
-	"encoding/csv"
+	"cloud.google.com/go/firestore"
 	"encoding/json"
 	"fmt"
 	"google.golang.org/api/iterator"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -49,16 +50,6 @@ func handleStatus(w http.ResponseWriter) {
 		}
 	}(fd)
 
-	// read CSV file
-	fileReader := csv.NewReader(fd)
-	records, err := fileReader.ReadAll()
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error reading CSV file: %s", err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Println(records)
-
 	restResp, err := http.Get(restURL)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error in response: %s", err.Error()), http.StatusInternalServerError)
@@ -66,11 +57,18 @@ func handleStatus(w http.ResponseWriter) {
 	}
 	defer restResp.Body.Close()
 
+	var fireStoreAvail = firestoreStatus()
+
+	var numOfHooks = 0
+	if fireStoreAvail == 200 {
+		numOfHooks = GetNumWebhooks()
+	}
+
 	// Get status codes from response structs
 	stData := Assignment2.StatusData{
 		CountriesAPI:   restResp.Status,
-		NotificationSB: firestoreStatus(),
-		Webhooks:       GetNumWebhooks(),
+		NotificationSB: fireStoreAvail,
+		Webhooks:       numOfHooks,
 		Version:        "v1",
 		Uptime:         time.Since(startTime).String(),
 	}
@@ -92,10 +90,22 @@ func handleStatus(w http.ResponseWriter) {
 func firestoreStatus() int {
 	ctx, client := GetContextAndClient()
 
-	// Retrieve list of all collections in the Firestore database
-	collections, err := client.Collections(ctx).GetAll()
-	if err != nil {
-		// Firestore is unavailable
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic: %v", r)
+		}
+	}()
+
+	collections, err := func() ([]*firestore.CollectionRef, error) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recovered from panic in GetAll: %v", r)
+			}
+		}()
+		return client.Collections(ctx).GetAll()
+	}()
+
+	if err != nil || collections == nil || len(collections) < 1 {
 		return http.StatusServiceUnavailable
 	}
 
@@ -106,6 +116,8 @@ func firestoreStatus() int {
 		if err == nil {
 			// Return a status code indicating that Firestore service is available
 			return http.StatusOK
+		} else {
+			log.Println("Error: %v", err)
 		}
 	}
 
