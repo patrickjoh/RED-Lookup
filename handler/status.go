@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"google.golang.org/api/iterator"
 	"net/http"
 	"os"
 	"time"
@@ -110,4 +111,29 @@ func firestoreStatus() int {
 
 	// Return error status code if no document found
 	return http.StatusServiceUnavailable
+}
+
+// GetNumWebhooks retrieves and returns the number of registered webhooks from Firestore
+func GetNumWebhooks() int {
+	// Get context and client
+	ctx, client = GetContextAndClient()
+
+	// Create reference to webhook collection in Firestore
+	webhooksCollection := client.Collection("webhooks")
+
+	// Retrieve all webhooks from db
+	iter := webhooksCollection.Documents(ctx)
+	var numWebhooks int
+	for {
+		_, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+		numWebhooks++
+	}
+
+	return numWebhooks
 }
