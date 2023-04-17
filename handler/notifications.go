@@ -88,26 +88,25 @@ func retrieveDocument(id string) {
 }
 
 // GetNumWebhooks retrieves and returns the number of registered webhooks from Firestore
-func GetNumWebhooks() (int, error) {
-
+func GetNumWebhooks() int {
 	// Set up Firebase app
-	opt := option.WithCredentialsFile(Assignment2.FIRESTORE_CREDS)
+	opt := option.WithCredentialsFile("path/to/your/firebase/serviceAccountKey.json")
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
-		return 0, err
+		panic(err)
 	}
 
 	// Initialize Firestore client
 	client, err := app.Firestore(context.Background())
 	if err != nil {
-		return 0, err
+		panic(err)
 	}
 	defer client.Close()
 
 	// Create reference to webhook collection in Firestore
 	webhooksCollection := client.Collection("webhooks")
 
-	// Retrieve all webhooks
+	// Retrieve all webhooks from db
 	iter := webhooksCollection.Documents(context.Background())
 	var numWebhooks int
 	for {
@@ -116,10 +115,10 @@ func GetNumWebhooks() (int, error) {
 			break
 		}
 		if err != nil {
-			return 0, err
+			panic(err)
 		}
 		numWebhooks++
 	}
 
-	return numWebhooks, nil
+	return numWebhooks
 }

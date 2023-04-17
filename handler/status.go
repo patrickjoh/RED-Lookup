@@ -69,9 +69,9 @@ func handleStatus(w http.ResponseWriter) {
 	stData := Assignment2.StatusData{
 		CountriesAPI: restResp.Status,
 		//NotificationDB:
-		//Webhooks: , // TODO
-		Version: "v1",
-		Uptime:  time.Since(startTime).String(),
+		Webhooks: GetNumWebhooks(),
+		Version:  "v1",
+		Uptime:   time.Since(startTime).String(),
 	}
 
 	// Encode struct as JSON
