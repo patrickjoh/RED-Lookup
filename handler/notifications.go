@@ -11,6 +11,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 // Firebase context and client used by Firestore functions throughout the program.
@@ -61,7 +62,7 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		retrieveDocument(w, r)
 	case http.MethodDelete:
-		handleNotificationsDelete(w, r)
+		deleteDocument(w, r)
 	}
 }
 
@@ -80,7 +81,7 @@ func addDocument(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Your payload (to be stored as document) appears to be empty. Ensure to terminate URI with /.", http.StatusBadRequest)
 	} else {
 		// Add element in embedded structure.
-		id, _, err := client.Collection(collection).Add(ctx,
+		id, _, err := client.Collection("webhooks").Add(ctx,
 			map[string]interface{}{
 				"text": string(text),
 				"ct":   ct,
@@ -96,25 +97,55 @@ func addDocument(w http.ResponseWriter, r *http.Request) {
 			// Returns document ID in body
 			log.Println("Document added to collection. Identifier of returned document: " + id.ID)
 			http.Error(w, id.ID, http.StatusCreated)
+
 			return
 		}
 	}
 }
 
-func handleNotificationsDelete(w http.ResponseWriter, r *http.Request) {
+func deleteDocument(w http.ResponseWriter, r *http.Request) {
+	// Remove the trailing slash and split the URL into parts
+	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
+	log.Println("UWU1 ")
 
+	// Error handling
+	if len(parts) < 4 || parts[3] != "notifications" {
+		log.Println(w, "Malformed URL", http.StatusBadRequest)
+		return
+	}
+
+	id := parts[4]
+
+	if len(id) != 0 {
+		// Retrieve specific message based on id (Firestore-generated hash)
+		res := client.Collection("webhooks").Doc(id)
+
+		// Retrieve reference to document
+		_, err2 := res.Get(ctx)
+		if err2 != nil {
+			log.Println("Error extracting body of returned document of message " + id)
+			http.Error(w, "Error extracting body of returned document of message "+id, http.StatusInternalServerError)
+			return
+		}
+
+		// Delete webhook from Firestore
+		_, err3 := res.Delete(ctx)
+		if err3 != nil {
+			log.Println("Error deleting document " + id)
+			http.Error(w, "Error deleting document "+id, http.StatusInternalServerError)
+			return
+		}
+
+	} else {
+		http.Error(w, "Id must be specified. Try /energy/v1/notifications/{id}", http.StatusBadRequest)
+	}
 }
 
 func postPayload(payload interface{}) {
 
 }
 
-// retrieveAllDocuments retrieves all registered webhooks
-func retrieveAllDocuments() {
-
-}
-
-// retrieveDocument a webhook specified by an id
+// retrieveDocument a webhook specified by an id, or all webhooks if no id is provided
 func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 	// Get id from RUL
 	id := r.URL.Query().Get("id")
@@ -123,7 +154,7 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 	if len(id) != 0 {
 
 		// Retrieve specific message based on id (Firestore-generated hash)
-		res := client.Collection(collection).Doc(id)
+		res := client.Collection("webhooks").Doc(id)
 
 		// Retrieve reference to document
 		doc, err2 := res.Get(ctx)
@@ -143,7 +174,7 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// Collective retrieval of messages
-		iter := client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
+		iter := client.Collection("webhooks").Documents(ctx) // Loop through all entries in collection "messages"
 
 		for {
 			doc, err := iter.Next()
@@ -153,7 +184,6 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Fatalf("Failed to iterate: %v", err)
 			}
-			// Note: You can access the document ID using "doc.Ref.ID"
 
 			// A message map with string keys. Each key is one field, like "text" or "timestamp"
 			m := doc.Data()
