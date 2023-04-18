@@ -57,9 +57,11 @@ func handleStatus(w http.ResponseWriter) {
 	}
 	defer restResp.Body.Close()
 
+	// Attempt to find a collection
 	var fireStoreAvail = firestoreStatus()
 
 	var numOfHooks = 0
+	// Only attempt to retrieve number of webhooks if a collection is found
 	if fireStoreAvail == 200 {
 		numOfHooks = GetNumWebhooks()
 	}
@@ -86,16 +88,18 @@ func handleStatus(w http.ResponseWriter) {
 	w.Write(data)
 }
 
-// firestoreStatus checks availability of Firestore db and returns status code
+// firestoreStatus checks availability of Firestore db and returns a status code
 func firestoreStatus() int {
 	ctx, client := GetContextAndClient()
 
+	// Recovers from panic if no collections exist
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("Recovered from panic: %v", r)
 		}
 	}()
 
+	// Attempt to retrieve all collection references from Firestore
 	collections, err := func() ([]*firestore.CollectionRef, error) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -105,6 +109,7 @@ func firestoreStatus() int {
 		return client.Collections(ctx).GetAll()
 	}()
 
+	// Return error if collection cannot be found
 	if err != nil || collections == nil || len(collections) < 1 {
 		return http.StatusServiceUnavailable
 	}
