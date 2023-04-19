@@ -114,39 +114,3 @@ func getCountries(isoCode []string) ([]Assignment2.Country, error) {
 
 	return countryData, nil
 }
-
-/*
-function that gets all countries, checks for redundancy and returns a struct of all countries with mean percentage
-*/
-func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.CountryMean {
-	var retData []Assignment2.CountryMean
-	lastCountry := ""
-	// going through all countries
-	for _, current := range countries {
-		// makes sure there are no repeated countries
-		if current.IsoCode != lastCountry {
-			lastCountry = current.IsoCode
-			// variable that stores mean percentage
-			var mean float64
-			// calls findCountry functions to get all instances of one country
-			countryHistory := findCountry(countries, current.IsoCode)
-			// loops through all instances and adds their percentage to the mean variable
-			for _, currentYear := range countryHistory {
-				mean += currentYear.Percentage
-			}
-			// converts length of countryHistory slice into a float/number of instances
-			numberInstances := float64(len(countryHistory))
-			// calculates mean percentage of a country
-			mean = mean / numberInstances
-			// initiates a country struct with the mean percentage
-			countryMean := Assignment2.CountryMean{
-				Name:       current.Name,
-				IsoCode:    current.IsoCode,
-				Percentage: mean,
-			}
-			// appends country to slice of countries
-			retData = append(retData, countryMean)
-		}
-	}
-	return retData
-}
