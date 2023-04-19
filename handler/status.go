@@ -2,7 +2,6 @@ package handler
 
 import (
 	"Assignment2"
-	"cloud.google.com/go/firestore"
 	"encoding/json"
 	"fmt"
 	"google.golang.org/api/iterator"
@@ -90,24 +89,15 @@ func handleStatus(w http.ResponseWriter) {
 
 // firestoreStatus checks availability of Firestore db and returns a status code
 func firestoreStatus() int {
-	ctx, client := GetContextAndClient()
 
-	// Recovers from panic if no collections exist
-	defer func() {
-		if r := recover(); r != nil {
-			log.Printf("Recovered from panic: %v", r)
-		}
-	}()
+	// Check if client is nil
+	if Client == nil {
+		log.Println("Client is nil")
+		return http.StatusInternalServerError
+	}
 
 	// Attempt to retrieve all collection references from Firestore
-	collections, err := func() ([]*firestore.CollectionRef, error) {
-		defer func() {
-			if r := recover(); r != nil {
-				log.Printf("Recovered from panic in GetAll: %v", r)
-			}
-		}()
-		return client.Collections(ctx).GetAll()
-	}()
+	collections, err := Client.Collections(Ctx).GetAll()
 
 	// Return error if collection cannot be found
 	if err != nil || collections == nil || len(collections) < 1 {
@@ -116,13 +106,22 @@ func firestoreStatus() int {
 
 	// Attempt to get document from any collection in Firestore
 	for _, collectionRef := range collections {
-		iter := collectionRef.Limit(1).Documents(ctx)
+		// Check if iter is nil
+		iter := collectionRef.Limit(1).Documents(Ctx)
+		if iter == nil {
+			log.Println("Iter is nil")
+			continue
+		}
+
 		_, err := iter.Next()
 		if err == nil {
 			// Return a status code indicating that Firestore service is available
 			return http.StatusOK
+		} else if err == iterator.Done {
+			continue
 		} else {
-			log.Println("Error: %v", err)
+			log.Printf("Error while iterating through documents: %v", err)
+			continue
 		}
 	}
 
@@ -132,14 +131,12 @@ func firestoreStatus() int {
 
 // GetNumWebhooks retrieves and returns the number of registered webhooks from Firestore
 func GetNumWebhooks() int {
-	// Get context and client
-	ctx, client = GetContextAndClient()
 
 	// Create reference to webhook collection in Firestore
-	webhooksCollection := client.Collection("webhooks")
+	webhooksCollection := Client.Collection("webhooks")
 
 	// Retrieve all webhooks from db
-	iter := webhooksCollection.Documents(ctx)
+	iter := webhooksCollection.Documents(Ctx)
 	var numWebhooks int
 	for {
 		_, err := iter.Next()
