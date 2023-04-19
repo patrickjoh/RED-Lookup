@@ -15,8 +15,8 @@ import (
 )
 
 // Firebase context and client used by Firestore functions throughout the program.
-var Ctx context.Context
-var Client *firestore.Client
+var ctx context.Context
+var client *firestore.Client
 
 // Collection name in Firestore
 const collection = "webhooks"
@@ -25,15 +25,15 @@ const collection = "webhooks"
 var ct = 0
 
 func initFirebase() {
-	Ctx = context.Background()
+	ctx = context.Background()
 
 	sa := option.WithCredentialsFile(Assignment2.FIRESTORE_CREDS)
-	app, err := firebase.NewApp(Ctx, nil, sa)
+	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	Client, err = app.Firestore(Ctx)
+	client, err = app.Firestore(ctx)
 
 	// Check whether there is an error when connecting to Firestore
 	if err != nil {
@@ -45,7 +45,7 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	initFirebase()
 
 	defer func() {
-		err := Client.Close()
+		err := client.Close()
 		if err != nil {
 			log.Fatal("Closing of the Firebase client failed. Error:", err)
 		}
@@ -76,7 +76,7 @@ func addDocument(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Your payload (to be stored as document) appears to be empty. Ensure to terminate URI with /.", http.StatusBadRequest)
 	} else {
 		// Add element in embedded structure.
-		id, _, err := Client.Collection("webhooks").Add(Ctx,
+		id, _, err := client.Collection("webhooks").Add(ctx,
 			map[string]interface{}{
 				"text": string(text),
 				"ct":   ct,
@@ -112,10 +112,10 @@ func deleteDocument(w http.ResponseWriter, r *http.Request) {
 	id := parts[4]
 
 	// Retrieve specific message based on id (Firestore-generated hash)
-	res := Client.Collection(collection).Doc(id)
+	res := client.Collection(collection).Doc(id)
 
 	// Attempt to retrieve reference to document
-	_, err2 := res.Get(Ctx)
+	_, err2 := res.Get(ctx)
 	if err2 != nil {
 		log.Println("Error extracting body of returned document of message " + id)
 		http.Error(w, "Error extracting body of returned document of message "+id, http.StatusInternalServerError)
@@ -123,7 +123,7 @@ func deleteDocument(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attempt to delete webhook from Firestore
-	_, err3 := res.Delete(Ctx)
+	_, err3 := res.Delete(ctx)
 	if err3 != nil {
 		log.Println("Error deleting document " + id)
 		http.Error(w, "Error deleting document "+id, http.StatusInternalServerError)
@@ -149,10 +149,10 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 		id := parts[4]
 
 		// Retrieve specific webhook based on id (Firestore-generated hash)
-		res := Client.Collection(collection).Doc(id)
+		res := client.Collection(collection).Doc(id)
 
 		// Retrieve reference to document
-		doc, err2 := res.Get(Ctx)
+		doc, err2 := res.Get(ctx)
 		if err2 != nil {
 			log.Println("Error extracting body of returned document of message " + id)
 			http.Error(w, "Error extracting body of returned document of message "+id, http.StatusInternalServerError)
@@ -169,7 +169,7 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// Retrieve all webhooks if no id is provided
-		iter := Client.Collection(collection).Documents(Ctx) // Loop through all entries in collection "messages"
+		iter := client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
 
 		for {
 			doc, err := iter.Next()

@@ -57,7 +57,7 @@ func handleStatus(w http.ResponseWriter) {
 	defer restResp.Body.Close()
 
 	// Attempt to find a collection
-	var fireStoreAvail = firestoreStatus()
+	var fireStoreAvail = FirestoreStatus()
 
 	var numOfHooks = 0
 	// Only attempt to retrieve number of webhooks if a collection is found
@@ -88,16 +88,18 @@ func handleStatus(w http.ResponseWriter) {
 }
 
 // firestoreStatus checks availability of Firestore db and returns a status code
-func firestoreStatus() int {
+func FirestoreStatus() int {
+
+	initFirebase()
 
 	// Check if client is nil
-	if Client == nil {
+	if client == nil {
 		log.Println("Client is nil")
 		return http.StatusInternalServerError
 	}
 
 	// Attempt to retrieve all collection references from Firestore
-	collections, err := Client.Collections(Ctx).GetAll()
+	collections, err := client.Collections(ctx).GetAll()
 
 	// Return error if collection cannot be found
 	if err != nil || collections == nil || len(collections) < 1 {
@@ -107,7 +109,7 @@ func firestoreStatus() int {
 	// Attempt to get document from any collection in Firestore
 	for _, collectionRef := range collections {
 		// Check if iter is nil
-		iter := collectionRef.Limit(1).Documents(Ctx)
+		iter := collectionRef.Limit(1).Documents(ctx)
 		if iter == nil {
 			log.Println("Iter is nil")
 			continue
@@ -133,10 +135,10 @@ func firestoreStatus() int {
 func GetNumWebhooks() int {
 
 	// Create reference to webhook collection in Firestore
-	webhooksCollection := Client.Collection("webhooks")
+	webhooksCollection := client.Collection(collection)
 
 	// Retrieve all webhooks from db
-	iter := webhooksCollection.Documents(Ctx)
+	iter := webhooksCollection.Documents(ctx)
 	var numWebhooks int
 	for {
 		_, err := iter.Next()
