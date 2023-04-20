@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -17,9 +18,7 @@ func init() {
 	startTime = time.Now()
 }
 
-/*
-StatusHandler: Entry point handler for Status handler
-*/
+// StatusHandler is the entry point handler for Status handler
 func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -60,8 +59,9 @@ func handleStatus(w http.ResponseWriter) {
 	var fireStoreAvail = FirestoreStatus()
 
 	var numOfHooks = 0
+	status := strconv.Itoa(http.StatusOK) + " " + http.StatusText(http.StatusOK)
 	// Only attempt to retrieve number of webhooks if a collection is found
-	if fireStoreAvail == 200 {
+	if fireStoreAvail == status {
 		numOfHooks = GetNumWebhooks()
 	}
 
@@ -87,15 +87,16 @@ func handleStatus(w http.ResponseWriter) {
 	w.Write(data)
 }
 
-// firestoreStatus checks availability of Firestore db and returns a status code
-func FirestoreStatus() int {
+// FirestoreStatus checks availability of Firestore db and returns a status code
+func FirestoreStatus() string {
 
 	initFirebase()
 
 	// Check if client is nil
 	if client == nil {
 		log.Println("Client is nil")
-		return http.StatusInternalServerError
+		status := strconv.Itoa(http.StatusInternalServerError) + " " + http.StatusText(http.StatusInternalServerError)
+		return status
 	}
 
 	// Attempt to retrieve all collection references from Firestore
@@ -103,7 +104,9 @@ func FirestoreStatus() int {
 
 	// Return error if collection cannot be found
 	if err != nil || collections == nil || len(collections) < 1 {
-		return http.StatusServiceUnavailable
+
+		status := strconv.Itoa(http.StatusServiceUnavailable) + " " + http.StatusText(http.StatusServiceUnavailable)
+		return status
 	}
 
 	// Attempt to get document from any collection in Firestore
@@ -118,7 +121,8 @@ func FirestoreStatus() int {
 		_, err := iter.Next()
 		if err == nil {
 			// Return a status code indicating that Firestore service is available
-			return http.StatusOK
+			status := strconv.Itoa(http.StatusOK) + " " + http.StatusText(http.StatusOK)
+			return status
 		} else if err == iterator.Done {
 			continue
 		} else {
@@ -128,7 +132,8 @@ func FirestoreStatus() int {
 	}
 
 	// Return error status code if no document found
-	return http.StatusServiceUnavailable
+	status := strconv.Itoa(http.StatusServiceUnavailable) + " " + http.StatusText(http.StatusServiceUnavailable)
+	return status
 }
 
 // GetNumWebhooks retrieves and returns the number of registered webhooks from Firestore
