@@ -14,8 +14,6 @@ import (
 // Documentation...
 func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodPost:
-		handleHistoryPost(w, r)
 	case http.MethodGet:
 		handleHistoryGet(w, r)
 	default:
@@ -23,11 +21,6 @@ func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 			"' is supported.", http.StatusNotImplemented)
 	}
 	return
-}
-
-// handleHistoryPost
-func handleHistoryPost(w http.ResponseWriter, r *http.Request) {
-
 }
 
 // handleHistoryGet
