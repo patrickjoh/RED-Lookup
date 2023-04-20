@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	firebase "firebase.google.com/go"
-	"fmt"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"io"
@@ -189,15 +188,20 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 
 		// A message map with string keys. Each key is one field, like "text" or "timestamp"
 		m := doc.Data()
-		_, err3 := fmt.Fprintln(w, m["text"])
+		/*_, err3 := fmt.Fprintln(w, m["text"])
 		if err3 != nil {
 			log.Println("Error while writing response body of message " + id)
 			http.Error(w, "Error while writing response body of message "+id, http.StatusInternalServerError)
 			return
-		}
+		}*/
+		m["WebhookID"] = id
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(m)
 	} else {
 		// Retrieve all webhooks if no id is provided
 		iter := client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
+
+		var hooks []Assignment2.WebhookData
 
 		for {
 			doc, err := iter.Next()
@@ -210,11 +214,26 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 
 			// A message map with string keys. Each key is one field, like "text" or "timestamp"
 			m := doc.Data()
-			_, err = fmt.Fprintln(w, m)
+			/*_, err = fmt.Fprintln(w, m)
 			if err != nil {
 				log.Println("Error while writing response body (Error: " + err.Error() + ")")
 				http.Error(w, "Error while writing response body (Error: "+err.Error()+")", http.StatusInternalServerError)
+			}*/
+
+			if m["Calls"] != nil {
+
+				new := Assignment2.WebhookData{
+					WebhookID: m["WebhookID"].(string),
+					Url:       m["Url"].(string),
+					Country:   m["Country"].(string),
+					Calls:     m["Calls"].(int64),
+				}
+
+				hooks = append(hooks, new)
 			}
+
 		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(hooks)
 	}
 }

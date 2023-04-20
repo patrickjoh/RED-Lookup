@@ -24,7 +24,7 @@ type WebhookData struct {
 	WebhookID string `json:"webhook_id"`
 	Url       string `json:"url"`
 	Country   string `json:"country"`
-	Calls     int    `json:"calls"`
+	Calls     int64  `json:"calls"`
 }
 
 // Country Struct for storing data from REST Countries API
