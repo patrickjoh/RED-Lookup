@@ -8,7 +8,7 @@ import (
 )
 
 // EmptyHandler handles default path
-func EmptyHandler(w http.ResponseWriter) {
+func EmptyHandler(w http.ResponseWriter, _ *http.Request) {
 	// Ensure interpretation as HTML by client (browser)
 	w.Header().Set("content-type", "text/html")
 
