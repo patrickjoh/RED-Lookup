@@ -4,6 +4,7 @@ import (
 	"Assignment2"
 	"cloud.google.com/go/firestore"
 	"context"
+	"encoding/json"
 	firebase "firebase.google.com/go"
 	"fmt"
 	"google.golang.org/api/iterator"
@@ -69,33 +70,43 @@ func addDocument(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Reading payload failed.", http.StatusInternalServerError)
 		return
 	}
+	defer r.Body.Close()
 
 	log.Println("Received request to add document for content ", string(text))
 	if len(string(text)) == 0 {
 		log.Println("Content appears to be empty.")
-		http.Error(w, "Your payload (to be stored as document) appears to be empty. Ensure to terminate URI with /.", http.StatusBadRequest)
-	} else {
-		// Add element in embedded structure.
-		id, _, err := client.Collection("webhooks").Add(ctx,
-			map[string]interface{}{
-				"text": string(text),
-				"ct":   ct,
-				"time": firestore.ServerTimestamp,
-			})
-		ct++
-		if err != nil {
-			// Error handling
-			log.Println("Error when adding document " + string(text) + ", Error: " + err.Error())
-			http.Error(w, "Error when adding document "+string(text)+", Error: "+err.Error(), http.StatusBadRequest)
-			return
-		} else {
-			// Returns document ID in body
-			log.Println("Document added to collection. Identifier of returned document: " + id.ID)
-			http.Error(w, id.ID, http.StatusCreated)
-
-			return
-		}
+		http.Error(w, "Your payload appears to be empty. Ensure to terminate URI with /.", http.StatusBadRequest)
+		return
 	}
+
+	var newWebhook Assignment2.WebhookData
+	err = json.Unmarshal(text, &newWebhook)
+	if err != nil {
+		log.Println("Error in decoding request body")
+		http.Error(w, "Error in decoding body.", http.StatusBadRequest)
+		return
+	}
+
+	// Add element in embedded structure.
+	docRef, _, err := client.Collection(collection).Add(ctx, newWebhook)
+	if err != nil {
+		// Error handling
+		log.Println("Error when adding document " + string(text) + ", Error: " + err.Error())
+		http.Error(w, "Error when adding document "+string(text)+", Error: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Store the generated ID in the webhook data struct
+	newWebhook.WebhookID = docRef.ID
+
+	// Return the newly created webhook ID in the response
+	resp := struct {
+		WebhookID string `json:"webhookId"`
+	}{
+		WebhookID: docRef.ID,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }
 
 func deleteDocument(w http.ResponseWriter, r *http.Request) {
