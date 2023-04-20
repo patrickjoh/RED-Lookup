@@ -7,9 +7,8 @@ import (
 	"net/http"
 )
 
-//DefaultHandler
-/*Handler for the default path*/
-func EmptyHandler(w http.ResponseWriter, r *http.Request) {
+// EmptyHandler handles default path
+func EmptyHandler(w http.ResponseWriter) {
 	// Ensure interpretation as HTML by client (browser)
 	w.Header().Set("content-type", "text/html")
 
