@@ -39,7 +39,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.RawQuery // Get the queries from url
 
 	if len(iso) != 3 && len(iso) != 0 {
-		log.Println(w, "Malformed URL", http.StatusBadRequest)
+		http.Error(w, "Malformed URL", http.StatusBadRequest)
 		return
 	}
 
@@ -64,7 +64,8 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	} else if begin == "" {
 		begin = end
 	} else if begin > end {
-		log.Println(w, "Incorrect use or year", http.StatusBadRequest)
+		log.Printf("begining year (%s) > ending year(%s)", begin, end)
+		http.Error(w, "Incorrect use of year", http.StatusBadRequest)
 		return
 	}
 
@@ -77,7 +78,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	if iso != "" {
 		countryIterators = findCountry(countryIterators, iso) // splice of one country's history
 	}
-	// Find country's history from beginning to end
+	// Find country's history from year(begin to end)
 	for _, col := range countryIterators {
 		if col.Year <= endYear && col.Year >= startYear {
 			newHisData := Assignment2.CountryData{
@@ -89,6 +90,12 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 			countData = append(countData, newHisData)
 		}
 	}
+
+	if len(countData) < 1 { // check if list is empty
+		http.Error(w, "No country found", http.StatusNotFound)
+		return
+	}
+
 	// if user want to sort by percentage
 	if sortByValue == "true" {
 		// Sorting the countData slice from lowest to highest by country percentage
