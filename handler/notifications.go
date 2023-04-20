@@ -214,6 +214,8 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 
 			// A message map with string keys. Each key is one field, like "text" or "timestamp"
 			m := doc.Data()
+			m["WebhookID"] = doc.Ref.ID
+
 			/*_, err = fmt.Fprintln(w, m)
 			if err != nil {
 				log.Println("Error while writing response body (Error: " + err.Error() + ")")
