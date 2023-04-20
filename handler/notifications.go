@@ -62,6 +62,7 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// addDocument adds a webhook to Firestore db
 func addDocument(w http.ResponseWriter, r *http.Request) {
 	// Read body
 	text, err := io.ReadAll(r.Body)
@@ -109,6 +110,7 @@ func addDocument(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// deleteDocument deletes a webhook from Firestore db
 func deleteDocument(w http.ResponseWriter, r *http.Request) {
 	// Remove the trailing slash and split the URL into parts
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
@@ -116,7 +118,7 @@ func deleteDocument(w http.ResponseWriter, r *http.Request) {
 	// Error handling if no provided id
 	if len(parts) < 5 || len(parts[4]) == 0 {
 		http.Error(w, "Id must be specified. Try /energy/v1/notifications/{id}", http.StatusBadRequest)
-		log.Println(w, "Malformed URL", http.StatusBadRequest)
+		log.Println("Malformed URL", http.StatusBadRequest)
 		return
 	}
 
@@ -126,30 +128,45 @@ func deleteDocument(w http.ResponseWriter, r *http.Request) {
 	res := client.Collection(collection).Doc(id)
 
 	// Attempt to retrieve reference to document
-	_, err2 := res.Get(ctx)
-	if err2 != nil {
+	doc, err := res.Get(ctx)
+	if err != nil {
 		log.Println("Error extracting body of returned document of message " + id)
 		http.Error(w, "Error extracting body of returned document of message "+id, http.StatusInternalServerError)
 		return
 	}
 
+	var data Assignment2.WebhookData
+
+	// Get webhook to be deleted
+	err = doc.DataTo(&data)
+	if err != nil {
+		log.Println("Error in decoding request body")
+		http.Error(w, "Error in decoding body.", http.StatusBadRequest)
+		return
+	}
+
+	data.WebhookID = id
+
 	// Attempt to delete webhook from Firestore
-	_, err3 := res.Delete(ctx)
-	if err3 != nil {
+	_, err = res.Delete(ctx)
+	if err != nil {
 		log.Println("Error deleting document " + id)
 		http.Error(w, "Error deleting document "+id, http.StatusInternalServerError)
 		return
-	} else {
-		log.Println("Document '" + id + "' deleted successfully")
-		http.Error(w, "Document '"+id+"' deleted successfully", http.StatusOK)
 	}
+
+	log.Println("Document '" + id + "' deleted successfully")
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
 }
 
 func postPayload(payload interface{}) {
 
 }
 
-// retrieveDocument a webhook specified by an id, or all webhooks if no id is provided
+// retrieveDocument retrieves a webhook specified by an id, or all webhooks if no id
+// is provided from firestore db
 func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 	// Remove the trailing slash and split the URL into parts
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
