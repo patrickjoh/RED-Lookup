@@ -493,7 +493,6 @@ Path: /energy/v1/status
 - github.com/stretchr/testify/assert
 
 # Contributors
-
 ## Developers
 This project was developed by:
 - Hoa Ben The Nguyen
