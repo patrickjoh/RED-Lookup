@@ -471,7 +471,6 @@ Path: /energy/v1/status
 {
    "countries_api": "<http status code for *REST Countries API*>",
    "notification_db": "<http status code for *Notification DB* in Firebase>",
-   ...
    "webhooks": <number of registered webhooks>,
    "version": "v1",
    "uptime": <time in seconds from the last service restart>
