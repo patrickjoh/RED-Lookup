@@ -20,9 +20,20 @@ type CountryMean struct {
 	Percentage float64 `json:"percentage"`
 }
 
-type WebhookData struct {
+type WebhookGet struct {
 	WebhookID string `json:"webhook_id"`
 	Url       string `json:"url"`
+	Country   string `json:"country"`
+	Calls     int64  `json:"calls"`
+}
+type WebhookPost struct {
+	Url     string `json:"url"`
+	Country string `json:"country"`
+	Calls   int64  `json:"calls"`
+}
+
+type WebhookInvoke struct {
+	WebhookID string `json:"webhook_id"`
 	Country   string `json:"country"`
 	Calls     int64  `json:"calls"`
 }
