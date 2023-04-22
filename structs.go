@@ -5,7 +5,7 @@ type StatusData struct {
 	NotificationSB string `json:"notifications_db"`
 	Webhooks       int    `json:"webhooks"`
 	Version        string `json:"version"`
-	Uptime         string `json:"uptime"`
+	Uptime         int    `json:"uptime"`
 }
 
 type CountryData struct {

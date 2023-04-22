@@ -65,13 +65,16 @@ func handleStatus(w http.ResponseWriter) {
 		numOfHooks = GetNumWebhooks()
 	}
 
+	elapsed := time.Since(startTime)
+	elapsedSeconds := int(elapsed.Seconds())
+
 	// Get status codes from response structs
 	stData := Assignment2.StatusData{
 		CountriesAPI:   restResp.Status,
 		NotificationSB: fireStoreAvail,
 		Webhooks:       numOfHooks,
 		Version:        "v1",
-		Uptime:         time.Since(startTime).String(),
+		Uptime:         elapsedSeconds,
 	}
 
 	// Encode struct as JSON
