@@ -24,6 +24,15 @@ const collection = "webhooks"
 // Message counter to produce some variation in content
 var ct = 0
 
+// Webhook DB
+var webhooks = []Assignment2.WebhookInvoke{}
+
+// var Mac hash.Hash
+var Secret []byte
+
+// Initialize signature (via init())
+var SignatureKey = "X-SIGNATURE"
+
 func initFirebase() {
 	ctx = context.Background()
 
@@ -61,8 +70,54 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+Calls given URL with given content and awaits response (status and body).
+*/ /*
+func CallUrl(url string, method string, content string) {
+	log.Println("Attempting invocation of url " + url + " with content '" + content + "'.")
+	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
+	req, err := http.NewRequest(method, url, bytes.NewReader([]byte(content)))
+	if err != nil {
+		log.Printf("%v", "Error during request creation. Error:", err)
+		return
+	}
+
+	/// BEGIN: HEADER GENERATION FOR CONTENT-BASED VALIDATION
+
+	// Hash content (for content-based validation; not relevant for URL-based validation)
+	mac := hmac.New(sha256.New, Secret)
+	_, err = mac.Write([]byte(content))
+	if err != nil {
+		log.Printf("%v", "Error during content hashing. Error:", err)
+		return
+	}
+	// Convert hash to string & add to header to transport to client for validation
+	req.Header.Add(SignatureKey, hex.EncodeToString(mac.Sum(nil)))
+
+	/// END: CONTENT-BASED VALIDATION
+
+	// Perform invocation
+	client := http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println("Error in HTTP request. Error:", err)
+		return
+	}
+
+	// Read the response
+	response, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Println("Something is wrong with invocation response. Error:", err)
+		return
+	}
+
+	log.Println("Webhook " + url + " invoked. Received status code " + strconv.Itoa(res.StatusCode) +
+		" and body: " + string(response))
+}*/
+
 // addDocument adds a webhook to Firestore db
 func addDocument(w http.ResponseWriter, r *http.Request) {
+
 	// Read body
 	text, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -71,6 +126,14 @@ func addDocument(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+	/*
+		log.Println("Received POST request...")
+		// Iterate through registered webhooks and invoke based on registered URL, method, and with received content
+		for _, v := range webhooks {
+			log.Println("Trigger event: Call to service endpoint with method POST" +
+				" and content '" + string(text) + "'.")
+			go CallUrl(v.WebhookID, v.Calls, v.Country)
+		}*/
 
 	log.Println("Received request to add document for content ", string(text))
 	if len(string(text)) == 0 {
@@ -79,7 +142,7 @@ func addDocument(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newWebhook Assignment2.WebhookData
+	var newWebhook Assignment2.WebhookGet
 	err = json.Unmarshal(text, &newWebhook)
 	if err != nil {
 		log.Println("Error in decoding request body")
@@ -134,7 +197,7 @@ func deleteDocument(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var data Assignment2.WebhookData
+	var data Assignment2.WebhookGet
 
 	// Get webhook to be deleted
 	err = doc.DataTo(&data)
@@ -201,7 +264,7 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 		// Retrieve all webhooks if no id is provided
 		iter := client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
 
-		var hooks []Assignment2.WebhookData
+		var hooks []Assignment2.WebhookGet
 
 		for {
 			doc, err := iter.Next()
@@ -224,7 +287,7 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 
 			if m["Calls"] != nil {
 
-				new := Assignment2.WebhookData{
+				new := Assignment2.WebhookGet{
 					WebhookID: m["WebhookID"].(string),
 					Url:       m["Url"].(string),
 					Country:   m["Country"].(string),
