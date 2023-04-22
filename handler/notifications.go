@@ -33,6 +33,10 @@ var Secret []byte
 // Initialize signature (via init())
 var SignatureKey = "X-SIGNATURE"
 
+/*
+initFirebase initializes the Firebase client and context.
+taken from code example 13
+*/
 func initFirebase() {
 	ctx = context.Background()
 
@@ -62,7 +66,7 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPost:
-		addDocument(w, r)
+		registerWebhook(w, r)
 	case http.MethodGet:
 		retrieveDocument(w, r)
 	case http.MethodDelete:
@@ -116,7 +120,7 @@ func CallUrl(url string, method string, content string) {
 }*/
 
 // addDocument adds a webhook to Firestore db
-func addDocument(w http.ResponseWriter, r *http.Request) {
+func registerWebhook(w http.ResponseWriter, r *http.Request) {
 
 	// Read body
 	text, err := io.ReadAll(r.Body)
@@ -223,7 +227,7 @@ func deleteDocument(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func postPayload(payload interface{}) {
+func webhookInvocation(w http.ResponseWriter, r *http.Request) {
 
 }
 
