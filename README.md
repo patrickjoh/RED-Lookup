@@ -1,28 +1,73 @@
 # Assignment 2
-This project is a REST web application in Golang that provides the client with the ability to retrieve information about developments related to renewable energy production for and across countries. This is done by using two existing webservice. The service also allows for notification registration using webhooks. The application is dockerized and deployed using an IaaS system.
-## Endpoints
-The service consists of the following four endpoints:
-```
+This project is a REST web application in Golang that provides the client with the ability to retrieve information about developments related to renewable energy production for and across countries. This is done by using two existing services. The service also allows for notification registration using webhooks. The application is dockerized and deployed using an IaaS system.
+
+## Table of Contents
+
+
+## Deployment
+
+### Docker
+
+
+### Golang
+
+
+## Usage
+
+### Endpoints
+The service has four endpoints:
+```http
 /energy/v1/renewables/current
 /energy/v1/renewables/history
 /energy/v1/notifications/
 /energy/v1/status/
 ```
 
-### Current percentage of renewables
-Path: ```/energy/v1/renewables/current/country?neighbours=bool```
-
-{country?} refers to an optional country 3-letter code. 
-
-{?neighbours=bool?} refers to an optional parameter indicating whether neighbouring countries' values should be shown.
-
-Example requests:
-- ```/energy/v1/renewables/current```
-- ```/energy/v1/renewables/current/nor```
-- ```/energy/v1/renewables/current/nor?neighbours=true```
-
-Body example with country code:
+If the web service is running on localhost, port 8080,
+the full paths to the resources would look like this:
+```http
+http://localhost:8080/energy/v1/renewables/current
+http://localhost:8080/energy/v1/renewables/history
+http://localhost:8080/energy/v1/notifications/
+http://localhost:8080/energy/v1/status/
 ```
+
+### Current percentage of renewables
+
+This endpoint focuses on returning the latest percentage of renewables in the energy mix for a given country, as well as for all countries.
+
+**Request**
+
+```http
+Method: GET
+Path: /energy/v1/renewables/current/{country?}{?neighbours=bool?}
+```
+
+`{country?}` refers to an optional country 3-letter code.
+
+`{?neighbours=bool?}` refers to an optional parameter indicating whether neighbouring countries' values also should be shown.
+
+**Example requests:**
+```http
+/energy/v1/renewables/current
+/energy/v1/renewables/current/nor
+/energy/v1/renewables/current/nor?neighbours=true
+```
+**Response**
+
+* Content-Type: `application/json`
+* Status: `200 OK` if OK, appropriate error code otherwise
+
+**Example responses**
+
+*Request:*
+```http
+Method: GET
+Path: /energy/v1/renewables/current/nor
+```
+
+*Response:*
+```json
 {
     "name": "Norway",
     "isoCode": "NOR",
@@ -30,9 +75,14 @@ Body example with country code:
     "percentage": 71.558365
 }
 ```
-
-Body example with country code and neighbour parameter activated:
+*Request:*
+```http
+Method: GET
+Path: /energy/v1/renewables/current/nor?neighbours=true
 ```
+
+*Response:*
+```json
 [
     {
         "name": "Norway",
@@ -60,7 +110,9 @@ Body example with country code and neighbour parameter activated:
     }
 ]
 ```
+
 ### Historical percentages of renewables
+
 Path: ```/energy/v1/renewables/history/{country?}{?begin=year&end=year?}```
 
 This endpoint focuses on returning historical percentages of renewables in the energy mix, including individual levels, as well as mean values for individual or selections of countries.
@@ -68,7 +120,7 @@ This endpoint focuses on returning historical percentages of renewables in the e
 {country} refers to an optional country 3-letter code.
 {?begin=year&end=year} refers to an optional range for country percentages.
 
-Example requests: 
+Example requests:
 - ```/energy/v1/renewables/history```
 - ```/energy/v1/renewables/history/nor```
 - ```/energy/v1/renewables/history/nor?begin=1970```
@@ -217,6 +269,7 @@ Body:
 ```
 
 ## Dependencies
+
 ### Third party services
 #### REST Countries API
 
@@ -224,11 +277,6 @@ Body:
 The renewable energy data set is retrieved from: https://ourworldindata.org/energy
 
 ### Imported modules
-- encoding/json
-- log
-- net/http
-- strconv
-- strings
 - cloud.google.com/go/firestore v1.9.0
 - firebase.google.com/go v3.13.0+incompatible
 - google.golang.org/api v0.118.0
@@ -237,10 +285,12 @@ The renewable energy data set is retrieved from: https://ourworldindata.org/ener
 ## Contributors
 ### Developers
 This project was developed by:
-  - Hoa Ben The Nguyen
-  - Magnus Johannessen
-  - Patrick Johannessen
-  - Sara Djordjevic
+- Hoa Ben The Nguyen
+- Magnus Johannessen
+- Patrick Johannessen
+- Sara Djordjevic
 
-## Deployment
-This service is deployed on an IaaS solution OpenStack using Docker.
+### Aknowledgements
+This project was developed as part of the course PROG2005 Cloud Technologies at NTNU Gjøvik, and was made partially using code from the course.
+
+Lecturer: Christopher Frantz
