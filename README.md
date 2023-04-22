@@ -1,9 +1,10 @@
 # Assignment 2 - Renewable Energy Data Lookup and Webhook Notification
-This project is a REST web application in Golang that provides the client with the ability to retrieve information about developments related to renewable energy production for and across countries. This is done by using two existing services. The service also allows for notification registration using webhooks. The application is dockerized and deployed using an IaaS system.
+This project is a REST web application in Golang that provides the client with the ability to retrieve information about developments related to renewable energy production for and across countries. This is done by using data from two existing services. The service also allows for notification registration using webhooks, and stores thes persistently using Firebase.
 
 # Table of Contents
 * [Introduction](#assignment-2---renewable-energy-data-lookup-and-webhook-notification)
 * [Deployment](#deployment)
+    * [Preparation:](#preparation)
     * [Docker](#docker)
         * [Alternative 1 - Docker-Compose](#alternative-1---docker-compose)
         * [Alternative 2 - Dockerfile](#alternative-2---dockerfile)
@@ -11,10 +12,10 @@ This project is a REST web application in Golang that provides the client with t
 * [Usage](#usage)
     * [Endpoints](#endpoints)
         * [Current percentage of renewables](#current-percentage-of-renewables)
-        * [Historical percentages of renewables](#-historical-percentages-of-renewables)
+        * [Historical percentages of renewables](#historical-percentages-of-renewables)
         * [Notifications](#notifications)
-            * [Register a webhook](#registering-a-webhook)
-            * [Delete a registered webhook](#deletion-of-webhook)
+            * [Register a webhook](#register-a-webhook)
+            * [Delete a registered webhook](#delete-a-registered-webhook)
             * [View registered webhooks](#view-registered-webhook)
             * [View all registered webhooks](#view-all-registered-webhooks)
             * [Webhook Invocation (Upon Trigger)](#webhook-invocation-upon-trigger)
@@ -24,6 +25,12 @@ This project is a REST web application in Golang that provides the client with t
 
 
 # Deployment
+
+## Preparation:
+
+* Create a Firebase project and enable the Firestore database.
+* Create a service account for the project and download the JSON file.
+* Copy the JSON file to the root directory of the project and rename it to `firebase.json`.
 
 ## Docker
 Pre-requisites:
@@ -308,7 +315,7 @@ Shows mean percentage for all countries
 ## Notifications
 Users can register webhooks that are triggered by the service based on specified events, specifically if information about given countries (or any country) is invoked, where the minimum frequency can be specified. Users can register multiple webhooks. The service saves these registrations in a Firebase DB backend.
 
-### Registering a Webhook
+### Registration of Webhook
 
 **- Request:**
 
@@ -323,7 +330,7 @@ The body contains:
 * The URL to be triggered upon event (the service that should be invoked)
 * The country for which the trigger applies (if empty, it applies to any invocation)
 * The number of invocations after which a notification is triggered (it should re-occur
-* Every number of invocations, (i.e., if 5 is specified, it should occur after 5, 10, 15 invocation, and so on, unless the webhook is deleted).
+* Every number of invocations, i.e., if 5 is specified, it should occur after 5, 10, 15 invocation, and so on, unless the webhook is deleted).
 
 ```http
 {
@@ -476,9 +483,9 @@ Path: /energy/v1/status
 ## External Services
 ### REST Countries API
 * http://universities.hipolabs.com/
-* Documentation/Source: https://github.com/Hipo/university-domains-list/
+* Documentation/Source under: https://github.com/Hipo/university-domains-list/
 ### Renewable Energy Dataset
-* Documentation/Source: https://ourworldindata.org/energy
+The renewable energy data set is retrieved from: https://ourworldindata.org/energy
 
 ## Imported Golang modules
 - cloud.google.com/go/firestore v1.9.0
@@ -495,7 +502,7 @@ This project was developed by:
 - Patrick Johannessen
 - Sara Djordjevic
 
-## Acknowledgements
+## Aknowledgements
 This project was developed as part of the course PROG2005 Cloud Technologies at NTNU Gjøvik, and was made partially using code from the course.
 
 Lecturer: Christopher Frantz
