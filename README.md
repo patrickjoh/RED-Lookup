@@ -4,7 +4,7 @@ This project is a REST web application in Golang that provides the client with t
 # Table of Contents
 * [Introduction](#assignment-2---renewable-energy-data-lookup-and-webhook-notification)
 * [Deployment](#deployment)
-    * [Preparation:](#preparation)
+    * [Preparation](#preparation)
     * [Docker](#docker)
         * [Alternative 1 - Docker-Compose](#alternative-1---docker-compose)
         * [Alternative 2 - Dockerfile](#alternative-2---dockerfile)
@@ -12,10 +12,10 @@ This project is a REST web application in Golang that provides the client with t
 * [Usage](#usage)
     * [Endpoints](#endpoints)
         * [Current percentage of renewables](#current-percentage-of-renewables)
-        * [Historical percentages of renewables](#historical-percentages-of-renewables)
+        * [Historical percentages of renewables](#-historical-percentages-of-renewables)
         * [Notifications](#notifications)
-            * [Register a webhook](#register-a-webhook)
-            * [Delete a registered webhook](#delete-a-registered-webhook)
+            * [Register a webhook](#registering-a-webhook)
+            * [Delete a registered webhook](#deletion-of-webhook)
             * [View registered webhooks](#view-registered-webhook)
             * [View all registered webhooks](#view-all-registered-webhooks)
             * [Webhook Invocation (Upon Trigger)](#webhook-invocation-upon-trigger)
@@ -26,7 +26,7 @@ This project is a REST web application in Golang that provides the client with t
 
 # Deployment
 
-## Preparation:
+## Preparation
 
 * Create a Firebase project and enable the Firestore database.
 * Create a service account for the project and download the JSON file.
@@ -315,7 +315,7 @@ Shows mean percentage for all countries
 ## Notifications
 Users can register webhooks that are triggered by the service based on specified events, specifically if information about given countries (or any country) is invoked, where the minimum frequency can be specified. Users can register multiple webhooks. The service saves these registrations in a Firebase DB backend.
 
-### Registration of Webhook
+### Registering a Webhook
 
 **- Request:**
 
@@ -483,9 +483,9 @@ Path: /energy/v1/status
 ## External Services
 ### REST Countries API
 * http://universities.hipolabs.com/
-* Documentation/Source under: https://github.com/Hipo/university-domains-list/
+* Documentation/Source: https://github.com/Hipo/university-domains-list/
 ### Renewable Energy Dataset
-The renewable energy data set is retrieved from: https://ourworldindata.org/energy
+* Documentation/Source: https://ourworldindata.org/energy
 
 ## Imported Golang modules
 - cloud.google.com/go/firestore v1.9.0
