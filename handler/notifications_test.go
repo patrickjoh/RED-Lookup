@@ -2,41 +2,48 @@ package handler
 
 import (
 	"Assignment2"
+	"bytes"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"strings"
 	"testing"
 )
 
 func TestAddDocument(t *testing.T) {
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", Assignment2.FIRESTORE_CREDS)
-	// Initialize Firebase project configuration
-	initFirebase()
 
-	// Set up sample payload for testing
-	payload := `{"testVal1":"testVal2"}`
-
-	// Create HTTP request with sample payload
-	req, err := http.NewRequest("POST", Assignment2.NOTIFICATION_PATH, strings.NewReader(payload))
+	body := map[string]interface{}{
+		"url":     "https://localhost:8080/client/",
+		"country": "Norway",
+		"calls":   5,
+	}
+	data, err := json.Marshal(body)
 	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
+		log.Println("Error marshalling body.")
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	// Create mock HTTP response recorder
+	log.Println("UWU1")
+
+	assert.Nil(t, err)
+
+	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewBuffer(data))
+	if err != nil {
+		log.Println("Error making request.")
+	}
+
 	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(NotificationsHandler)
 
-	// Execute HTTP request handler with mock request and response
-	handler := http.HandlerFunc(addDocument)
-	handler.ServeHTTP(rr, req)
+	log.Println("UWU3")
+	handler.ServeHTTP(rr, request)
+	log.Println("UWU4")
 
-	// Verify HTTP response matches expected output
-	expectedResponse := `{"webhookId":"random-webhook-id"}`
-	if rr.Body.String() != expectedResponse {
-		t.Errorf("Handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expectedResponse)
+	if rr.Code != http.StatusCreated {
+		log.Println("Status code: ", rr.Code)
 	}
+
+	assert.Equal(t, http.StatusCreated, rr.Code)
 }
 
 func testDeleteDocument() {
