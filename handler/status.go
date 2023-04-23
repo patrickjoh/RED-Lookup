@@ -93,8 +93,6 @@ func handleStatus(w http.ResponseWriter) {
 // FirestoreStatus checks availability of Firestore db and returns a status code
 func FirestoreStatus() string {
 
-	initFirebase()
-
 	// Check if client is nil
 	if client == nil {
 		log.Println("Client is nil")
