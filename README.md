@@ -234,12 +234,14 @@ This endpoint returns historical percentages of renewables in the energy mix, in
 
 ```http
 Method: GET
-Path: /energy/v1/renewables/history/{country?}{?begin=year&end=year?}
+Path: /energy/v1/renewables/history/{country?}{?begin=year&end=year?}{?sortByValue=true?}
 ```
 
 `{country}` refers to an optional country 3-letter code.
 
 `{?begin=year&end=year}` refers to an optional range for the selected country.
+
+`{?sortByValue=true}` refers to an optional sort of percentage of all selected countries in descending order.
 
 *Example requests:*
 ```http
@@ -247,6 +249,7 @@ Path: /energy/v1/renewables/history/{country?}{?begin=year&end=year?}
 /energy/v1/renewables/history/nor
 /energy/v1/renewables/history/nor?begin=1970
 /energy/v1/renewables/history/nor?begin=1960&end=1970
+/energy/v1/renewables/history/nor?begin=1960&end=1970&sortByValue=true
 ```
 
 **- Request:**
