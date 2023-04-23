@@ -21,9 +21,6 @@ var client *firestore.Client
 // Collection name in Firestore
 const collection = "webhooks"
 
-// Message counter to produce some variation in content
-var ct = 0
-
 // Webhook DB
 var webhooks = []Assignment2.WebhookInvoke{}
 
@@ -37,7 +34,7 @@ var SignatureKey = "X-SIGNATURE"
 initFirebase initializes the Firebase client and context.
 taken from code example 13
 */
-func initFirebase() {
+func InitFirebase() {
 	ctx = context.Background()
 
 	sa := option.WithCredentialsFile(Assignment2.FIRESTORE_CREDS)
@@ -55,7 +52,6 @@ func initFirebase() {
 }
 
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
-	initFirebase()
 
 	defer func() {
 		err := client.Close()
@@ -68,9 +64,9 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		registerWebhook(w, r)
 	case http.MethodGet:
-		retrieveDocument(w, r)
+		retrieveWebhook(w, r)
 	case http.MethodDelete:
-		deleteDocument(w, r)
+		deleteWebhook(w, r)
 	}
 }
 
@@ -177,7 +173,7 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 // deleteDocument deletes a webhook from Firestore db
-func deleteDocument(w http.ResponseWriter, r *http.Request) {
+func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	// Remove the trailing slash and split the URL into parts
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
 
@@ -233,7 +229,7 @@ func webhookInvocation(w http.ResponseWriter, r *http.Request) {
 
 // retrieveDocument retrieves a webhook specified by an id, or all webhooks if no id
 // is provided from firestore db
-func retrieveDocument(w http.ResponseWriter, r *http.Request) {
+func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 	// Remove the trailing slash and split the URL into parts
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
 
@@ -306,3 +302,60 @@ func retrieveDocument(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(hooks)
 	}
 }
+
+func InvokeWebhook(id string) {
+	// 1. Get webhook from id and parse into struct
+
+	// 2. Get url from webhook
+
+	// 3. Populate response struct with webhook data
+
+	// 4. Send post request to url
+}
+
+/*		UWU pseudocode webhook invocation
+
+Initializing call counting: (for method1)
+	1. Create counting collection
+	2. Copy iso codes from counting collection to local struct
+	2. When new webhook is created:
+		-> Go through counting collection
+		-> If country does not exist in collection
+			-> Add country to collection
+			-> Add country to local struct
+
+Counting calls: (method1)
+	1. For each get request
+		-> Check if country in request is in counting struct
+		-> If it is
+			-> Update count in counting collection for said country
+			-> Call function that checks if any webhook should be invoked
+				-> If webhook should be invoked
+					-> Send relevant webhook id (or maybe webhook data) to invocation function
+
+			NB1 problem: if count for countryX is 10, and new webhook is invoked for countryX
+						for every 5 calls, should the webhook be invoked immediately?
+						Should the webhook be invoked after the count has become 15?
+
+			NB2 problem: requires separate collection for keeping track of call count
+
+Counting calls: (method2)
+	1. For each get request
+		-> Save iso3code
+		-> Loop through webhook struct (local copy of DB)
+		-> For every webhook with matching iso3code
+			-> Decrement calls by 1
+			-> If the count for any webhook has become 0
+				-> Call invocation function for said webhook (send webhook data or webhook id)
+				-> Reset count to original number
+			-> Update count in collection and struct
+
+				NB problem: requires an extra field in webhook struct to remember original count
+
+
+Invoking webhooks:
+	1. Parse webhook into struct (or maybe webhook data is sent as parameter?)
+	2. Get url from webhook
+	3. Populate response struct with webhook data
+	4. Send post request to url
+*/
