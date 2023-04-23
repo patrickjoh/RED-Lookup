@@ -224,14 +224,14 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 
 			if m["Calls"] != nil {
 
-				new := Assignment2.WebhookGet{
+				newHook := Assignment2.WebhookGet{
 					WebhookID: m["WebhookID"].(string),
 					Url:       m["Url"].(string),
 					Country:   m["Country"].(string),
 					Calls:     m["Calls"].(int64),
 				}
 
-				hooks = append(hooks, new)
+				hooks = append(hooks, newHook)
 			}
 
 		}
@@ -311,7 +311,7 @@ func invokeWebhook(invoke Assignment2.WebhookGet) {
 	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
 	_, err := http.Post(invoke.Url, "application/json", bytes.NewReader([]byte(payload)))
 	if err != nil {
-		log.Println("%v", "Error during request creation. Error:", err)
+		log.Println("Error during request creation. Error:", err)
 		return
 	}
 

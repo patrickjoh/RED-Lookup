@@ -123,13 +123,17 @@ func getOneCountry(data []Assignment2.CountryData, isoCodes []string) []Assignme
 	for _, iso := range isoCodes {
 		relCountries := findCountry(data, iso)
 		for _, current := range relCountries {
-			if current.Year > currentHighestYear { // New highest year found
+			// New highest year found
+			if current.Year > currentHighestYear {
 				currentHighestEntry = current
 				currentHighestYear = current.Year
 			}
 		}
 		returnData = append(returnData, currentHighestEntry)
 		currentHighestYear = 0
+
+		// Update counter for webhook invocation
+		UpdateAndInvoke(iso)
 	}
 
 	return returnData
