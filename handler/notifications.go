@@ -17,7 +17,7 @@ import (
 
 // Firebase context and client used by Firestore functions throughout the program.
 var ctx context.Context
-var client *firestore.Client
+var Client *firestore.Client
 
 // Collection name in Firestore
 const collection = "webhooks"
@@ -39,7 +39,7 @@ func InitFirebase() {
 		log.Fatalln(err)
 	}
 
-	client, err = app.Firestore(ctx)
+	Client, err = app.Firestore(ctx)
 
 	// Check whether there is an error when connecting to Firestore
 	if err != nil {
@@ -49,10 +49,10 @@ func InitFirebase() {
 
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
-	InitFirebase()
+	//InitFirebase()
 
 	defer func() {
-		err := client.Close()
+		err := Client.Close()
 		if err != nil {
 			log.Fatal("Closing of the Firebase client failed. Error:", err)
 		}
@@ -99,7 +99,7 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 	newWebhook.Counter = 0
 
 	// Add element in embedded structure.
-	docRef, _, err := client.Collection(collection).Add(ctx, newWebhook)
+	docRef, _, err := Client.Collection(collection).Add(ctx, newWebhook)
 	if err != nil {
 		// Error handling
 		log.Println("Error when adding document " + string(text) + ", Error: " + err.Error())
@@ -135,7 +135,7 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	id := parts[4]
 
 	// Retrieve specific message based on id (Firestore-generated hash)
-	res := client.Collection(collection).Doc(id)
+	res := Client.Collection(collection).Doc(id)
 
 	// Attempt to retrieve reference to document
 	doc, err := res.Get(ctx)
@@ -187,7 +187,7 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 		id := parts[4]
 
 		// Retrieve specific webhook based on id (Firestore-generated hash)
-		res := client.Collection(collection).Doc(id)
+		res := Client.Collection(collection).Doc(id)
 
 		// Retrieve reference to document
 		doc, err2 := res.Get(ctx)
@@ -205,7 +205,7 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(m)
 	} else {
 		// Retrieve all webhooks if no id is provided
-		iter := client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
+		iter := Client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
 
 		var hooks []Assignment2.WebhookGet
 
@@ -242,10 +242,10 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 
 func UpdateAndInvoke(isoCode string) {
 
-	InitFirebase()
+	//InitFirebase()
 
 	// Get all webhooks from Firestore
-	iter := client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
+	iter := Client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
 
 	var hooks []Assignment2.WebhookGet
 
@@ -286,7 +286,7 @@ func UpdateAndInvoke(isoCode string) {
 			}
 		}
 		// Update webhook in Firestore
-		docRef := client.Collection(collection).Doc(currentHook.WebhookID)
+		docRef := Client.Collection(collection).Doc(currentHook.WebhookID)
 
 		// Set the "counter" field of the webhook to the new value
 		_, err := docRef.Set(ctx, currentHook)
