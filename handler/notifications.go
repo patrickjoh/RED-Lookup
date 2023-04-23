@@ -22,16 +22,8 @@ var client *firestore.Client
 // Collection name in Firestore
 const collection = "webhooks"
 
-// var Mac hash.Hash
-var Secret []byte
-
-// Initialize signature (via init())
-var SignatureKey = "X-SIGNATURE"
-
-/*
-initFirebase initializes the Firebase client and context.
-taken from code example 13
-*/
+// InitFirebase initializes the Firebase client and context.
+// taken from code example 13
 func InitFirebase() {
 	ctx = context.Background()
 
@@ -252,7 +244,7 @@ func invokeWebhook(id string, invoke Assignment2.WebhookGet) {
 	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
 	_, err := http.Post(invoke.Url, "application/json", bytes.NewReader([]byte(payload)))
 	if err != nil {
-		log.Println("%v", "Error during request creation. Error:", err)
+		log.Println("Error during request creation. Error:", err)
 		return
 	}
 
