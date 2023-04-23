@@ -96,14 +96,14 @@ func FirestoreStatus() string {
 	InitFirebase()
 
 	// Check if client is nil
-	if client == nil {
+	if Client == nil {
 		log.Println("Client is nil")
 		status := strconv.Itoa(http.StatusInternalServerError) + " " + http.StatusText(http.StatusInternalServerError)
 		return status
 	}
 
 	// Attempt to retrieve all collection references from Firestore
-	collections, err := client.Collections(ctx).GetAll()
+	collections, err := Client.Collections(ctx).GetAll()
 
 	// Return error if collection cannot be found
 	if err != nil || collections == nil || len(collections) < 1 {
@@ -143,7 +143,7 @@ func FirestoreStatus() string {
 func GetNumWebhooks() int {
 
 	// Create reference to webhook collection in Firestore
-	webhooksCollection := client.Collection(collection)
+	webhooksCollection := Client.Collection(collection)
 
 	// Retrieve all webhooks from db
 	iter := webhooksCollection.Documents(ctx)
