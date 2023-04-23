@@ -101,6 +101,7 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 
 	var retData []Assignment2.CountryData // Slice to hold the most recent entry for each country
 	for _, record := range mostRecentData {
+		UpdateAndInvoke(record.IsoCode)   // UWU not certain if work??
 		retData = append(retData, record) // Adding the most recent entry for each country to a slice
 	}
 
