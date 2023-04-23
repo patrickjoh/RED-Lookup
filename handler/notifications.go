@@ -51,6 +51,8 @@ func InitFirebase() {
 
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
+	InitFirebase()
+
 	defer func() {
 		err := client.Close()
 		if err != nil {
@@ -79,14 +81,6 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-	/*
-		log.Println("Received POST request...")
-		// Iterate through registered webhooks and invoke based on registered URL, method, and with received content
-		for _, v := range webhooks {
-			log.Println("Trigger event: Call to service endpoint with method POST" +
-				" and content '" + string(text) + "'.")
-			go CallUrl(v.WebhookID, v.Calls, v.Country)
-		}*/
 
 	log.Println("Received request to add document for content ", string(text))
 	if len(string(text)) == 0 {
@@ -204,12 +198,7 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 
 		// A message map with string keys. Each key is one field, like "text" or "timestamp"
 		m := doc.Data()
-		/*_, err3 := fmt.Fprintln(w, m["text"])
-		if err3 != nil {
-			log.Println("Error while writing response body of message " + id)
-			http.Error(w, "Error while writing response body of message "+id, http.StatusInternalServerError)
-			return
-		}*/
+
 		m["WebhookID"] = id
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(m)
@@ -232,12 +221,6 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 			m := doc.Data()
 			m["WebhookID"] = doc.Ref.ID
 
-			/*_, err = fmt.Fprintln(w, m)
-			if err != nil {
-				log.Println("Error while writing response body (Error: " + err.Error() + ")")
-				http.Error(w, "Error while writing response body (Error: "+err.Error()+")", http.StatusInternalServerError)
-			}*/
-
 			if m["Calls"] != nil {
 
 				new := Assignment2.WebhookGet{
@@ -256,78 +239,21 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func invokeWebhook(url string, invoke Assignment2.WebhookInvoke) {
+func invokeWebhook(id string, invoke Assignment2.WebhookGet) {
 
 	data := Assignment2.WebhookInvoke{
-		WebhookID: invoke.WebhookID,
+		WebhookID: id,
 		Country:   invoke.Country,
 		Calls:     invoke.Calls,
 	}
 
 	payload, _ := json.Marshal(data)
-	log.Println("Attempting invocation of url " + url + " with content '" + "payload" + "'.")
+	log.Println("Attempting invocation of url " + invoke.Url + " with content '" + "payload" + "'.")
 	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
-	_, err := http.Post(url, "application/json", bytes.NewReader([]byte(payload)))
+	_, err := http.Post(invoke.Url, "application/json", bytes.NewReader([]byte(payload)))
 	if err != nil {
-		log.Printf("%v", "Error during request creation. Error:", err)
+		log.Println("%v", "Error during request creation. Error:", err)
 		return
 	}
 
 }
-
-func InvokeWebhook(id string) {
-	// 1. Get webhook from id and parse into struct
-
-	// 2. Get url from webhook
-
-	// 3. Populate response struct with webhook data
-
-	// 4. Send post request to url
-}
-
-/*		UWU pseudocode webhook invocation
-
-Initializing call counting: (for method1)
-	1. Create counting collection
-	2. Copy iso codes from counting collection to local struct
-	2. When new webhook is created:
-		-> Go through counting collection
-		-> If country does not exist in collection
-			-> Add country to collection
-			-> Add country to local struct
-
-Counting calls: (method1)
-	1. For each get request
-		-> Check if country in request is in counting struct
-		-> If it is
-			-> Update count in counting collection for said country
-			-> Call function that checks if any webhook should be invoked
-				-> If webhook should be invoked
-					-> Send relevant webhook id (or maybe webhook data) to invocation function
-
-			NB1 problem: if count for countryX is 10, and new webhook is invoked for countryX
-						for every 5 calls, should the webhook be invoked immediately?
-						Should the webhook be invoked after the count has become 15?
-
-			NB2 problem: requires separate collection for keeping track of call count
-
-Counting calls: (method2)
-	1. For each get request
-		-> Save iso3code
-		-> Loop through webhook struct (local copy of DB)
-		-> For every webhook with matching iso3code
-			-> Decrement calls by 1
-			-> If the count for any webhook has become 0
-				-> Call invocation function for said webhook (send webhook data or webhook id)
-				-> Reset count to original number
-			-> Update count in collection and struct
-
-				NB problem: requires an extra field in webhook struct to remember original count
-
-
-Invoking webhooks:
-	1. Parse webhook into struct (or maybe webhook data is sent as parameter?)
-	2. Get url from webhook
-	3. Populate response struct with webhook data
-	4. Send post request to url
-*/

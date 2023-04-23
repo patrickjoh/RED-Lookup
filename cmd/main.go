@@ -17,8 +17,6 @@ func main() {
 		port = Assignment2.DEFAULT_PORT
 	}
 
-	handler.InitFirebase()
-
 	mux := http.NewServeMux() // Create a new ServeMux for the main application
 	mux.HandleFunc(Assignment2.DEFAULT_PATH, handler.EmptyHandler)
 	mux.HandleFunc(Assignment2.HISTORY_PATH, handler.HistoryHandler)
