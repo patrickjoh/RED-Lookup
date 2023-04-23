@@ -89,7 +89,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 
 	// If no country is found
 	if len(countData) < 1 {
-		http.Error(w, "No country found", http.StatusNotFound)
+		http.Error(w, "No entry with matching credentials found", http.StatusNotFound)
 		return
 	}
 

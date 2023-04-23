@@ -242,6 +242,8 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 
 func UpdateAndInvoke(isoCode string) {
 
+	InitFirebase()
+
 	// Get all webhooks from Firestore
 	iter := client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
 
@@ -267,6 +269,7 @@ func UpdateAndInvoke(isoCode string) {
 				Url:       m["Url"].(string),
 				Country:   m["Country"].(string),
 				Calls:     m["Calls"].(int64),
+				Counter:   m["Counter"].(int64),
 			}
 			hooks = append(hooks, newHook)
 		}
@@ -275,10 +278,10 @@ func UpdateAndInvoke(isoCode string) {
 	// Loop through all webhooks
 	for _, currentHook := range hooks {
 		// If current webhook == isoCode
-		if currentHook.Country == isoCode {
+		if currentHook.Country == strings.ToUpper(isoCode) {
 			currentHook.Counter++
 			// If conditions for invocation are met
-			if (currentHook.Calls%currentHook.Counter == 0) && currentHook.Counter > 0 {
+			if (currentHook.Counter%currentHook.Calls == 0) && currentHook.Counter > 0 {
 				invokeWebhook(currentHook)
 			}
 		}
@@ -291,7 +294,6 @@ func UpdateAndInvoke(isoCode string) {
 		// If error, log and return
 		if err != nil {
 			log.Printf("Failed updating document: %v", err)
-
 		}
 	}
 }

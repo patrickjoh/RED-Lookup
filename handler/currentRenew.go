@@ -136,7 +136,6 @@ func getOneCountry(data []Assignment2.CountryData, isoCodes []string) []Assignme
 		// Update counter for webhook invocation
 		UpdateAndInvoke(iso)
 	}
-
 	return returnData
 }
 
