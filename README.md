@@ -239,9 +239,9 @@ Path: /energy/v1/renewables/history/{country?}{?begin=year&end=year?}{?sortByVal
 
 `{country}` refers to an optional country 3-letter code.
 
-`{?begin=year&end=year}` refers to an optional range for the selected country.
+`{?begin=year&end=year}` refers to an optional parameter that limits output of the selected country to be within the given range.
 
-`{?sortByValue=true}` refers to an optional sort of percentage of all selected countries in descending order.
+`{?sortByValue=true}` refers to an optional parameter that sorts the output in descending order based on the energy percentage
 
 *Example requests:*
 ```http
