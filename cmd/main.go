@@ -17,6 +17,16 @@ func main() {
 		port = Assignment2.DEFAULT_PORT
 	}
 
+	handler.InitFirebase()
+
+	// Close down client
+	defer func() {
+		err := handler.Client.Close()
+		if err != nil {
+			log.Fatal("Closing of the firebase client failed. Error:", err)
+		}
+	}()
+
 	mux := http.NewServeMux() // Create a new ServeMux for the main application
 	mux.HandleFunc(Assignment2.DEFAULT_PATH, handler.EmptyHandler)
 	mux.HandleFunc(Assignment2.HISTORY_PATH, handler.HistoryHandler)
