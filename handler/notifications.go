@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Assignment2"
+	"bytes"
 	"cloud.google.com/go/firestore"
 	"context"
 	"encoding/json"
@@ -301,6 +302,25 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(hooks)
 	}
+}
+
+func invokeWebhook(url string, invoke Assignment2.WebhookInvoke) {
+
+	data := Assignment2.WebhookInvoke{
+		WebhookID: invoke.WebhookID,
+		Country:   invoke.Country,
+		Calls:     invoke.Calls,
+	}
+
+	payload, _ := json.Marshal(data)
+	log.Println("Attempting invocation of url " + url + " with content '" + "payload" + "'.")
+	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
+	_, err := http.Post(url, "application/json", bytes.NewReader([]byte(payload)))
+	if err != nil {
+		log.Printf("%v", "Error during request creation. Error:", err)
+		return
+	}
+
 }
 
 func InvokeWebhook(id string) {
