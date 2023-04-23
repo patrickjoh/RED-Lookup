@@ -240,7 +240,7 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func updateAndInvoke(isoCode string) {
+func UpdateAndInvoke(isoCode string) {
 
 	// Get all webhooks from Firestore
 	iter := client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
@@ -253,7 +253,7 @@ func updateAndInvoke(isoCode string) {
 			break
 		}
 		if err != nil {
-			log.Fatalf("Failed to iterate: %v", err)
+			log.Printf("Failed to iterate: %v", err)
 		}
 
 		// A message map with string keys. Each key is one field, like "text" or "timestamp"
@@ -282,12 +282,18 @@ func updateAndInvoke(isoCode string) {
 				invokeWebhook(currentHook)
 			}
 		}
-		updateWebhook(currentHook.WebhookID, currentHook.Counter)
+		// Update webhook in Firestore
+		docRef := client.Collection(collection).Doc(currentHook.WebhookID)
+
+		// Set the "counter" field of the webhook to the new value
+		_, err := docRef.Set(ctx, currentHook)
+
+		// If error, log and return
+		if err != nil {
+			log.Printf("Failed updating document: %v", err)
+
+		}
 	}
-}
-
-func updateWebhook(id string, counter int64) {
-
 }
 
 func invokeWebhook(invoke Assignment2.WebhookGet) {
