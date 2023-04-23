@@ -22,9 +22,6 @@ var client *firestore.Client
 // Collection name in Firestore
 const collection = "webhooks"
 
-// Webhook DB
-var webhooks = []Assignment2.WebhookInvoke{}
-
 // var Mac hash.Hash
 var Secret []byte
 
@@ -70,51 +67,6 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 		deleteWebhook(w, r)
 	}
 }
-
-/*
-Calls given URL with given content and awaits response (status and body).
-*/ /*
-func CallUrl(url string, method string, content string) {
-	log.Println("Attempting invocation of url " + url + " with content '" + content + "'.")
-	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
-	req, err := http.NewRequest(method, url, bytes.NewReader([]byte(content)))
-	if err != nil {
-		log.Printf("%v", "Error during request creation. Error:", err)
-		return
-	}
-
-	/// BEGIN: HEADER GENERATION FOR CONTENT-BASED VALIDATION
-
-	// Hash content (for content-based validation; not relevant for URL-based validation)
-	mac := hmac.New(sha256.New, Secret)
-	_, err = mac.Write([]byte(content))
-	if err != nil {
-		log.Printf("%v", "Error during content hashing. Error:", err)
-		return
-	}
-	// Convert hash to string & add to header to transport to client for validation
-	req.Header.Add(SignatureKey, hex.EncodeToString(mac.Sum(nil)))
-
-	/// END: CONTENT-BASED VALIDATION
-
-	// Perform invocation
-	client := http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		log.Println("Error in HTTP request. Error:", err)
-		return
-	}
-
-	// Read the response
-	response, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Println("Something is wrong with invocation response. Error:", err)
-		return
-	}
-
-	log.Println("Webhook " + url + " invoked. Received status code " + strconv.Itoa(res.StatusCode) +
-		" and body: " + string(response))
-}*/
 
 // addDocument adds a webhook to Firestore db
 func registerWebhook(w http.ResponseWriter, r *http.Request) {
