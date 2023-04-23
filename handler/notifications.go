@@ -22,6 +22,12 @@ var client *firestore.Client
 // Collection name in Firestore
 const collection = "webhooks"
 
+// Secret
+var Secret []byte
+
+// SignatureKey initializes signature (via init())
+var SignatureKey = "X-SIGNATURE"
+
 // InitFirebase initializes the Firebase client and context.
 // taken from code example 13
 func InitFirebase() {
@@ -88,6 +94,9 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error in decoding body.", http.StatusBadRequest)
 		return
 	}
+
+	// Initialize counter for invocation
+	newWebhook.Counter = 0
 
 	// Add element in embedded structure.
 	docRef, _, err := client.Collection(collection).Add(ctx, newWebhook)
@@ -231,7 +240,59 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func invokeWebhook(id string, invoke Assignment2.WebhookGet) {
+func updateAndInvoke(isoCode string) {
+
+	// Get all webhooks from Firestore
+	iter := client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
+
+	var hooks []Assignment2.WebhookGet
+
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Failed to iterate: %v", err)
+		}
+
+		// A message map with string keys. Each key is one field, like "text" or "timestamp"
+		m := doc.Data()
+		m["WebhookID"] = doc.Ref.ID
+
+		if m["Calls"] != nil {
+
+			newHook := Assignment2.WebhookGet{
+				WebhookID: m["WebhookID"].(string),
+				Url:       m["Url"].(string),
+				Country:   m["Country"].(string),
+				Calls:     m["Calls"].(int64),
+			}
+			hooks = append(hooks, newHook)
+		}
+	}
+
+	// Loop through all webhooks
+	for _, currentHook := range hooks {
+		// If current webhook == isoCode
+		if currentHook.Country == isoCode {
+			currentHook.Counter++
+			// If conditions for invocation are met
+			if (currentHook.Calls%currentHook.Counter == 0) && currentHook.Counter > 0 {
+				invokeWebhook(currentHook)
+			}
+		}
+		updateWebhook(currentHook.WebhookID, currentHook.Counter)
+	}
+}
+
+func updateWebhook(id string, counter int64) {
+
+}
+
+func invokeWebhook(invoke Assignment2.WebhookGet) {
+
+	id := invoke.WebhookID
 
 	data := Assignment2.WebhookInvoke{
 		WebhookID: id,
@@ -244,7 +305,7 @@ func invokeWebhook(id string, invoke Assignment2.WebhookGet) {
 	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
 	_, err := http.Post(invoke.Url, "application/json", bytes.NewReader([]byte(payload)))
 	if err != nil {
-		log.Println("Error during request creation. Error:", err)
+		log.Println("%v", "Error during request creation. Error:", err)
 		return
 	}
 

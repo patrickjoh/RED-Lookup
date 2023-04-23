@@ -25,6 +25,7 @@ type WebhookGet struct {
 	Url       string `json:"url"`
 	Country   string `json:"country"`
 	Calls     int64  `json:"calls"`
+	Counter   int64  `json:"counter"`
 }
 type WebhookPost struct {
 	Url     string `json:"url"`
