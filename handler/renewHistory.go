@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// Documentation...
+// HistoryHandler handles get requests for history endpoint
 func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -23,7 +23,9 @@ func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// handleHistoryGet
+// handleHistoryGet returns renewables for a given country in a provided range, or
+// if no country is specified returns the mean of the renewables for all countries by calling
+// getAllCountriesMean(). It also sorts the data by percentage in descending order
 func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Split url to get keyword
 	urlKeywords := strings.Split(r.URL.Path, "/")
@@ -67,9 +69,10 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	endYear, _ := strconv.Atoi(end)         // Convert end year to int
 	countryIterators := convertCsvData()    // Read all countries data from csv
 
-	// if Iso Code is given only one country's data is checked
+	// Find all entries for a given country if an Iso code has been specified
 	if iso != "" {
-		countryIterators = findCountry(countryIterators, iso) // splice of one country's history
+		countryIterators = findCountry(countryIterators, iso) // Slice of one country's history
+		UpdateAndInvoke(iso)                                  // UWU maybe work, maybe not????
 	}
 	// Find country's history from year(begin to end)
 	for _, col := range countryIterators {
@@ -84,12 +87,13 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if len(countData) < 1 { // check if list is empty
+	// If no country is found
+	if len(countData) < 1 {
 		http.Error(w, "No country found", http.StatusNotFound)
 		return
 	}
 
-	// if user want to sort by percentage
+	// If user want to sort by percentage
 	if sortByValue == "true" {
 		// Sorting the countData slice from lowest to highest by country percentage
 		sort.Slice(countData, func(i, j int) bool {
@@ -97,7 +101,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	// if no Iso is given print all countries mean percentage else print one country's history
+	// If no Iso is given print all countries mean percentage else print one country's history
 	if iso == "" {
 		countMean := getAllCountriesMean(countData) // get all countries mean percentage
 
@@ -119,9 +123,8 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
-function that gets all countries, checks for redundancy and returns a struct of all countries with mean percentage
-*/
+// getAllCountriesMean gets all countries, checks for redundancy and returns a struct of
+// all countries with mean percentage of their renewable energy
 func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.CountryMean {
 	var retData []Assignment2.CountryMean
 	lastCountry := ""
@@ -148,6 +151,7 @@ func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.Coun
 				IsoCode:    current.IsoCode,
 				Percentage: mean,
 			}
+			UpdateAndInvoke(countryMean.IsoCode) // UWU maybe work, maybe not???
 			// appends country to slice of countries
 			retData = append(retData, countryMean)
 		}
