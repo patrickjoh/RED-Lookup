@@ -22,15 +22,9 @@ var Client *firestore.Client
 // Collection name in Firestore
 const collection = "webhooks"
 
-// Secret
-var Secret []byte
-
-// SignatureKey initializes signature (via init())
-var SignatureKey = "X-SIGNATURE"
-
 // InitFirebase initializes the Firebase client and context.
 // taken from code example 13
-func InitFirebase() {
+func init() {
 	ctx = context.Background()
 
 	sa := option.WithCredentialsFile(Assignment2.FIRESTORE_CREDS)
@@ -49,15 +43,6 @@ func InitFirebase() {
 
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
-	//InitFirebase()
-
-	defer func() {
-		err := Client.Close()
-		if err != nil {
-			log.Fatal("Closing of the Firebase client failed. Error:", err)
-		}
-	}()
-
 	switch r.Method {
 	case http.MethodPost:
 		registerWebhook(w, r)
@@ -73,12 +58,12 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 
 	// Read body
 	text, err := io.ReadAll(r.Body)
+	defer r.Body.Close()
 	if err != nil {
 		log.Println("Reading payload from body failed.")
 		http.Error(w, "Reading payload failed.", http.StatusInternalServerError)
 		return
 	}
-	defer r.Body.Close()
 
 	log.Println("Received request to add document for content ", string(text))
 	if len(string(text)) == 0 {
@@ -171,10 +156,6 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func webhookInvocation(w http.ResponseWriter, r *http.Request) {
-
-}
-
 // retrieveDocument retrieves a webhook specified by an id, or all webhooks if no id
 // is provided from firestore db
 func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
@@ -182,16 +163,15 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
 
 	// Retrieve individual webhook if id is provided
-	if len(parts) > 4 && len(parts[4]) != 0 {
+	if len(parts) > 4 {
 
 		id := parts[4]
-
 		// Retrieve specific webhook based on id (Firestore-generated hash)
 		res := Client.Collection(collection).Doc(id)
 
 		// Retrieve reference to document
-		doc, err2 := res.Get(ctx)
-		if err2 != nil {
+		doc, err := res.Get(ctx)
+		if err != nil {
 			log.Println("Error extracting body of returned document of message " + id)
 			http.Error(w, "Error extracting body of returned document of message "+id, http.StatusInternalServerError)
 			return
@@ -241,8 +221,6 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateAndInvoke(isoCode string) {
-
-	//InitFirebase()
 
 	// Get all webhooks from Firestore
 	iter := Client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"

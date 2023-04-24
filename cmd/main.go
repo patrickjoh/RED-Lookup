@@ -17,8 +17,6 @@ func main() {
 		port = Assignment2.DEFAULT_PORT
 	}
 
-	handler.InitFirebase()
-
 	// Close down client
 	defer func() {
 		err := handler.Client.Close()
