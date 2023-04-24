@@ -53,6 +53,8 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	// If the country code is provided
 	if len(parts) == 6 {
 		if len(parts[5]) != 3 {
+			http.Error(w, "Iso code must be 3 letter long", http.StatusBadRequest)
+			log.Println("Iso code not 3 letters long: ", parts[5])
 		} else {
 			var isoCodes []string
 			isoCodes = append(isoCodes, parts[5])
@@ -66,8 +68,21 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
+			if len(isoCodes) < 1 {
+				log.Println("No iso code found")
+				http.Error(w, "No iso code found", http.StatusBadRequest)
+				return
+			}
+
 			// Fetching data for one country, possibly with neighbors
 			countryData = getOneCountry(convertCsvData(), isoCodes)
+
+			// No country found with matching data
+			if len(countryData) < 2 && countryData[0].Name == "" {
+				log.Println("No country found")
+				http.Error(w, "MNo country found", http.StatusBadRequest)
+				return
+			}
 		}
 	} else if len(parts) == 5 { // If no country code is provided
 		countryData = getAllCountries(convertCsvData())
@@ -142,6 +157,7 @@ func getOneCountry(data []Assignment2.CountryData, isoCodes []string) []Assignme
 		// Update counter for webhook invocation
 		UpdateAndInvoke(iso)
 	}
+
 	return returnData
 }
 

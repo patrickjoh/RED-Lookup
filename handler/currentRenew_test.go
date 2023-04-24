@@ -3,6 +3,8 @@ package handler
 import (
 	"Assignment2"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -16,7 +18,7 @@ var sampleData = []Assignment2.CountryData{
 	{Name: "Thailand", IsoCode: "THA", Year: 2021, Percentage: 99.1},
 }
 
-// TestGetAllCountries tests the getAllCountries function*/
+// TestGetAllCountries tests the getAllCountries function
 func TestGetAllCountries(t *testing.T) {
 	// Expected output
 	expected := []Assignment2.CountryData{
@@ -31,7 +33,7 @@ func TestGetAllCountries(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-// TestGetAllCountries tests the getAllCountries function*/
+// TestGetAllCountries tests the getAllCountries function
 func TestGetAllCountriesNoData(t *testing.T) {
 	// Expected output
 	data := []Assignment2.CountryData{}
@@ -56,12 +58,50 @@ func TestGetOneCountry(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-// TestGetOneCountry tests the getOneCountry function
-func TestGetOneCountryNoIso(t *testing.T) {
+func TestCurrentRenewTooManyParts(t *testing.T) {
+	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"AAAAA/hdjfhdjfh", nil)
 
-	isoCodes := []string{}
+	assert.Nil(t, err)
+	responseRecorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(RenewablesHandler)
 
-	result := getOneCountry(sampleData, isoCodes)
+	handler.ServeHTTP(responseRecorder, request)
 
-	assert.Equal(t, 0, len(result))
+	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code)
+}
+
+func TestGetOneCountryWrongMethod(t *testing.T) {
+	request, err := http.NewRequest(http.MethodPost, Assignment2.CURRENT_PATH, nil)
+
+	assert.Nil(t, err)
+	responseRecorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(RenewablesHandler)
+
+	handler.ServeHTTP(responseRecorder, request)
+
+	assert.Equal(t, http.StatusNotImplemented, responseRecorder.Code)
+}
+
+func TestGetOneCountryTooLongIso(t *testing.T) {
+	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"abababa", nil)
+
+	assert.Nil(t, err)
+	responseRecorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(RenewablesHandler)
+
+	handler.ServeHTTP(responseRecorder, request)
+
+	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code)
+}
+
+func TestGetOneCountryNonExistingIso(t *testing.T) {
+	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"aaa", nil)
+
+	assert.Nil(t, err)
+	responseRecorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(RenewablesHandler)
+
+	handler.ServeHTTP(responseRecorder, request)
+
+	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code)
 }
