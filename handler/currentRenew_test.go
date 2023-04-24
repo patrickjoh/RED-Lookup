@@ -31,6 +31,16 @@ func TestGetAllCountries(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
+// TestGetAllCountries tests the getAllCountries function*/
+func TestGetAllCountriesNoData(t *testing.T) {
+	// Expected output
+	data := []Assignment2.CountryData{}
+
+	result := getAllCountries(data)
+
+	assert.Equal(t, 0, len(result))
+}
+
 // TestGetOneCountry tests the getOneCountry function
 func TestGetOneCountry(t *testing.T) {
 	// Expected output
@@ -44,4 +54,14 @@ func TestGetOneCountry(t *testing.T) {
 	result := getOneCountry(sampleData, isoCodes)
 
 	assert.Equal(t, expected, result)
+}
+
+// TestGetOneCountry tests the getOneCountry function
+func TestGetOneCountryNoIso(t *testing.T) {
+
+	isoCodes := []string{}
+
+	result := getOneCountry(sampleData, isoCodes)
+
+	assert.Equal(t, 0, len(result))
 }
