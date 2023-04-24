@@ -63,56 +63,57 @@ func TestGetOneCountry(t *testing.T) {
 
 // TestCurrentRenewTooManyParts tests current endpoint if there are too many parts
 func TestCurrentRenewTooManyParts(t *testing.T) {
+
 	InitFirebase()
-	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"AAAAA/hdjfhdjfh", nil)
+
+	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.CURRENT_PATH + "AAAAA/hdjfhdjfh"
+	response, err := http.Get(url)
 
 	assert.Nil(t, err)
-	responseRecorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(RenewablesHandler)
-
-	handler.ServeHTTP(responseRecorder, request)
-
-	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code)
+	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 }
 
 // TestGetOneCountryWrongMethod tests current endpoint if the method is not implemented
 func TestGetOneCountryWrongMethod(t *testing.T) {
 	InitFirebase()
-	request, err := http.NewRequest(http.MethodPost, Assignment2.CURRENT_PATH, nil)
+
+	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.CURRENT_PATH
+	response, err := http.Post(url, "", nil)
 
 	assert.Nil(t, err)
-	responseRecorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(RenewablesHandler)
-
-	handler.ServeHTTP(responseRecorder, request)
-
-	assert.Equal(t, http.StatusNotImplemented, responseRecorder.Code)
+	assert.Equal(t, http.StatusNotImplemented, response.StatusCode)
 }
 
 // TestGetOneCountryTooLongIso tests current endpoint if the iso code is not three letters long
 func TestGetOneCountryTooLongIso(t *testing.T) {
 	InitFirebase()
-	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"abababa", nil)
+
+	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.CURRENT_PATH + "abababba"
+	response, err := http.Get(url)
 
 	assert.Nil(t, err)
-	responseRecorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(RenewablesHandler)
-
-	handler.ServeHTTP(responseRecorder, request)
-
-	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code)
+	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 }
 
 // TestGetOneCountryNonExistingIso tests the current endpoint if a non-existing iso code is provided
 func TestGetOneCountryNonExistingIso(t *testing.T) {
 	InitFirebase()
-	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"aaa", nil)
+
+	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.CURRENT_PATH + "aaa"
+	response, err := http.Get(url)
 
 	assert.Nil(t, err)
-	responseRecorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(RenewablesHandler)
-
-	handler.ServeHTTP(responseRecorder, request)
-
-	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code)
+	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 }
