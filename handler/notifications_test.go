@@ -11,44 +11,51 @@ import (
 	"testing"
 )
 
-func TestAddDocument(t *testing.T) {
+func TestRegisterWebhook(t *testing.T) {
 
+	InitFirebase()
+
+	//https://webhook.site/63e2fb75-0742-44c1-9f14-fdd327649704
 	body := map[string]interface{}{
-		"url":     "https://localhost:8080/client/",
-		"country": "Norway",
-		"calls":   5,
+		"url":     "https://webhook.site/63e2fb75-0742-44c1-9f14-fdd327649704",
+		"country": "NOR",
+		"calls":   3,
 	}
-	data, err := json.Marshal(body)
+
+	log.Println("bod", body)
+
+	data, err := json.MarshalIndent(body, "", " ")
 	if err != nil {
 		log.Println("Error marshalling body.")
 	}
-
 	assert.Nil(t, err)
+	log.Println("data", data)
 
-	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewBuffer(data))
+	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(data))
 	if err != nil {
 		log.Println("Error making request.")
 	}
+	log.Println("resp", request)
 
-	rr := httptest.NewRecorder()
+	responseR := httptest.NewRecorder()
+	log.Println("resp", responseR)
+
 	handler := http.HandlerFunc(NotificationsHandler)
 
-	log.Println("UWU3")
-	handler.ServeHTTP(rr, request)
-	log.Println("UWU4")
+	handler.ServeHTTP(responseR, request)
 
-	if rr.Code != http.StatusCreated {
-		log.Println("Status code: ", rr.Code)
+	if responseR.Code != http.StatusCreated {
+		log.Println("Status code: ", responseR.Code)
 	}
-
-	assert.Equal(t, http.StatusCreated, rr.Code)
+	log.Println("response here:", responseR.Code)
+	assert.Equal(t, http.StatusCreated, responseR.Code)
 }
 
 /*
-func TestDeleteDocument() {
+func TestDeleteWebhook() {
 
 }
 
-func TestGetDocument() {
+func TestRetrieveWebhook() {
 
 }*/
