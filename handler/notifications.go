@@ -87,8 +87,6 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 	newWebhook.Counter = 0
 
 	// Add element in embedded structure.
-	log.Println(ctx, " ", newWebhook, " ", collection, " ", Client)
-	log.Println(Client.Collection(collection).Add(ctx, newWebhook))
 	docRef, _, err := Client.Collection(collection).Add(ctx, newWebhook)
 	log.Println(docRef)
 	if err != nil {
@@ -107,6 +105,7 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 	}{
 		WebhookID: docRef.ID,
 	}
+	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }
