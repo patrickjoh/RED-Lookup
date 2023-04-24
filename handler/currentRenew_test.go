@@ -20,6 +20,7 @@ var sampleData = []Assignment2.CountryData{
 
 // TestGetAllCountries tests the getAllCountries function
 func TestGetAllCountries(t *testing.T) {
+	InitFirebase()
 	// Expected output
 	expected := []Assignment2.CountryData{
 		{Name: "Azerbaijan", IsoCode: "AZE", Year: 2021, Percentage: 54.2},
@@ -35,6 +36,7 @@ func TestGetAllCountries(t *testing.T) {
 
 // TestGetAllCountries tests the getAllCountries function
 func TestGetAllCountriesNoData(t *testing.T) {
+	InitFirebase()
 	// Expected output
 	data := []Assignment2.CountryData{}
 
@@ -45,6 +47,7 @@ func TestGetAllCountriesNoData(t *testing.T) {
 
 // TestGetOneCountry tests the getOneCountry function
 func TestGetOneCountry(t *testing.T) {
+	InitFirebase()
 	// Expected output
 	expected := []Assignment2.CountryData{
 		{Name: "Azerbaijan", Year: 2021, IsoCode: "AZE", Percentage: 54.2},
@@ -59,6 +62,7 @@ func TestGetOneCountry(t *testing.T) {
 }
 
 func TestCurrentRenewTooManyParts(t *testing.T) {
+	InitFirebase()
 	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"AAAAA/hdjfhdjfh", nil)
 
 	assert.Nil(t, err)
@@ -71,6 +75,7 @@ func TestCurrentRenewTooManyParts(t *testing.T) {
 }
 
 func TestGetOneCountryWrongMethod(t *testing.T) {
+	InitFirebase()
 	request, err := http.NewRequest(http.MethodPost, Assignment2.CURRENT_PATH, nil)
 
 	assert.Nil(t, err)
@@ -83,6 +88,7 @@ func TestGetOneCountryWrongMethod(t *testing.T) {
 }
 
 func TestGetOneCountryTooLongIso(t *testing.T) {
+	InitFirebase()
 	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"abababa", nil)
 
 	assert.Nil(t, err)
@@ -95,6 +101,7 @@ func TestGetOneCountryTooLongIso(t *testing.T) {
 }
 
 func TestGetOneCountryNonExistingIso(t *testing.T) {
+	InitFirebase()
 	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"aaa", nil)
 
 	assert.Nil(t, err)
