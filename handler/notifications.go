@@ -171,10 +171,6 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func webhookInvocation(w http.ResponseWriter, r *http.Request) {
-
-}
-
 // retrieveDocument retrieves a webhook specified by an id, or all webhooks if no id
 // is provided from firestore db
 func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
