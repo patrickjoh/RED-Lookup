@@ -65,6 +65,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 					isoCodes = append(isoCodes, borders)
 				}
 			}
+
 			// Fetching data for one country, possibly with neighbors
 			countryData = getOneCountry(convertCsvData(), isoCodes)
 		}
@@ -117,6 +118,11 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 // parameter is set to true, it also retrieves the latest entries for the countries
 // that share a border with the given country.
 func getOneCountry(data []Assignment2.CountryData, isoCodes []string) []Assignment2.CountryData {
+
+	if len(isoCodes) < 1 {
+		return []Assignment2.CountryData{}
+	}
+
 	var returnData []Assignment2.CountryData
 	currentHighestYear := 0                         // The currently highest year found
 	var currentHighestEntry Assignment2.CountryData // The struct with the currently highest year
