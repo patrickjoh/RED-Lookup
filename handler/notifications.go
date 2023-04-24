@@ -23,22 +23,25 @@ var Client *firestore.Client
 const collection = "webhooks"
 
 // InitFirebase initializes the Firebase client and context.
-// taken from code example 13
-func init() {
+func InitFirebase() error {
 	ctx = context.Background()
 
-	sa := option.WithCredentialsFile(Assignment2.FIRESTORE_CREDS)
-	app, err := firebase.NewApp(ctx, nil, sa)
+	// Replace "path/to/your-service-account-key.json" with the actual path to your service account key file.
+	credentials := Assignment2.FIRESTORE_CREDS
+	opt := option.WithCredentialsFile(credentials)
+	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("Failed to create a new Firebase app: %v", err)
+		return err
 	}
 
 	Client, err = app.Firestore(ctx)
-
-	// Check whether there is an error when connecting to Firestore
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("Failed to create a new Firestore client: %v", err)
+		return err
 	}
+
+	return nil
 }
 
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {

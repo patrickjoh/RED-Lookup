@@ -16,14 +16,12 @@ func main() {
 		log.Println("$PORT has not been set. Default: " + Assignment2.DEFAULT_PORT)
 		port = Assignment2.DEFAULT_PORT
 	}
-
-	// Close down client
-	defer func() {
-		err := handler.Client.Close()
-		if err != nil {
-			log.Fatal("Closing of the firebase client failed. Error:", err)
-		}
-	}()
+	// Initialize Firebase
+	err := handler.InitFirebase()
+	if err != nil {
+		log.Fatalf("Failed to initialize Firebase: %v", err)
+	}
+	defer handler.Client.Close()
 
 	mux := http.NewServeMux() // Create a new ServeMux for the main application
 	mux.HandleFunc(Assignment2.DEFAULT_PATH, handler.EmptyHandler)
