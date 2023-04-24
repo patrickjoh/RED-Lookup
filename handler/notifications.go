@@ -9,7 +9,6 @@ import (
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -56,30 +55,15 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// addDocument adds a webhook to Firestore db
+// registerWebhook adds a webhook to Firestore db
 func registerWebhook(w http.ResponseWriter, r *http.Request) {
 
-	// Read body
-	text, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		log.Println("Reading payload from body failed.")
-		http.Error(w, "Reading payload failed.", http.StatusInternalServerError)
-		return
-	}
-
-	log.Println("Received request to add document for content ", string(text))
-	if len(string(text)) == 0 {
-		log.Println("Content appears to be empty.")
-		http.Error(w, "Your payload appears to be empty. Ensure to terminate URI with /.", http.StatusBadRequest)
-		return
-	}
-
+	// Decode the request body into a webhook struct
 	var newWebhook Assignment2.WebhookGet
-	err = json.Unmarshal(text, &newWebhook)
+	err := json.NewDecoder(r.Body).Decode(&newWebhook)
 	if err != nil {
-		log.Println("Error in decoding request body")
-		http.Error(w, "Error in decoding body.", http.StatusBadRequest)
+		log.Println("Error in decoding request body", err.Error())
+		http.Error(w, "Error in processing request body", http.StatusBadRequest)
 		return
 	}
 
@@ -90,13 +74,21 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 	docRef, _, err := Client.Collection(collection).Add(ctx, newWebhook)
 	if err != nil {
 		// Error handling
-		log.Println("Error when adding document " + string(text) + ", Error: " + err.Error())
-		http.Error(w, "Error when adding document "+string(text)+", Error: "+err.Error(), http.StatusBadRequest)
+		log.Println("Error when adding Webhook to database: ", err.Error())
+		http.Error(w, "Error when adding Webhook to database: ", http.StatusBadRequest)
 		return
 	}
 
 	// Store the generated ID in the webhook data struct
 	newWebhook.WebhookID = docRef.ID
+
+	// Update the document with the generated ID
+	_, err = Client.Collection(collection).Doc(docRef.ID).Update(ctx, []firestore.Update{{Path: "webhookId", Value: docRef.ID}})
+	if err != nil {
+		log.Println("Error when updating document with generated ID, Error: " + err.Error())
+		http.Error(w, "Error when updating document with generated ID, Error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	// Return the newly created webhook ID in the response
 	resp := struct {
@@ -105,7 +97,12 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 		WebhookID: docRef.ID,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	jsonData, err := json.Marshal(resp)
+	if err != nil {
+		// handle error
+	}
+	w.Write(jsonData)
+
 }
 
 // deleteDocument deletes a webhook from Firestore db
