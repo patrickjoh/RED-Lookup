@@ -23,8 +23,6 @@ func TestAddDocument(t *testing.T) {
 		log.Println("Error marshalling body.")
 	}
 
-	log.Println("UWU1")
-
 	assert.Nil(t, err)
 
 	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewBuffer(data))
@@ -46,10 +44,11 @@ func TestAddDocument(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, rr.Code)
 }
 
-func testDeleteDocument() {
+/*
+func TestDeleteDocument() {
 
 }
 
-func testGetDocument() {
+func TestGetDocument() {
 
-}
+}*/

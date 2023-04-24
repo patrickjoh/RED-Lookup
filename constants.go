@@ -13,5 +13,5 @@ const (
 	COUNTRYAPI_CODES  = "http://129.241.150.113:8080/v3.1/alpha?codes="
 	//STUB_COUNTRY      = "http://localhost:8081/Country/" // Stubbed handler for country data
 	//STUB_NEIGHBOURS   = "http://localhost:8081/Neighbour/" // Stubbed handler for neighbour data
-	FIRESTORE_CREDS = "firebase.json"
+	FIRESTORE_CREDS = "./firebase.json"
 )
