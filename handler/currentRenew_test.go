@@ -61,6 +61,7 @@ func TestGetOneCountry(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
+// TestCurrentRenewTooManyParts tests current endpoint if there are too many parts
 func TestCurrentRenewTooManyParts(t *testing.T) {
 	InitFirebase()
 	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"AAAAA/hdjfhdjfh", nil)
@@ -74,6 +75,7 @@ func TestCurrentRenewTooManyParts(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code)
 }
 
+// TestGetOneCountryWrongMethod tests current endpoint if the method is not implemented
 func TestGetOneCountryWrongMethod(t *testing.T) {
 	InitFirebase()
 	request, err := http.NewRequest(http.MethodPost, Assignment2.CURRENT_PATH, nil)
@@ -87,6 +89,7 @@ func TestGetOneCountryWrongMethod(t *testing.T) {
 	assert.Equal(t, http.StatusNotImplemented, responseRecorder.Code)
 }
 
+// TestGetOneCountryTooLongIso tests current endpoint if the iso code is not three letters long
 func TestGetOneCountryTooLongIso(t *testing.T) {
 	InitFirebase()
 	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"abababa", nil)
@@ -100,6 +103,7 @@ func TestGetOneCountryTooLongIso(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code)
 }
 
+// TestGetOneCountryNonExistingIso tests the current endpoint if a non-existing iso code is provided
 func TestGetOneCountryNonExistingIso(t *testing.T) {
 	InitFirebase()
 	request, err := http.NewRequest(http.MethodGet, Assignment2.CURRENT_PATH+"aaa", nil)
