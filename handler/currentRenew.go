@@ -208,6 +208,7 @@ func getNeighborCountry(w http.ResponseWriter, IsoCode string) ([]string, error)
 	for _, country := range countryData {
 		borderCountries = append(borderCountries, country.Alpha3Code)
 	}
+
 	// Return the list of border countries
 	return borderCountries, err
 }

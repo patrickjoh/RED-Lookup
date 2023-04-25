@@ -61,9 +61,22 @@ func TestGetOneCountry(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
+// TestCurrentRenew tests current endpoint with no iso code
+func TestCurrentRenew(t *testing.T) {
+	InitFirebase()
+
+	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.CURRENT_PATH
+	response, err := http.Get(url)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+}
+
 // TestCurrentRenewTooManyParts tests current endpoint if there are too many parts
 func TestCurrentRenewTooManyParts(t *testing.T) {
-
 	InitFirebase()
 
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
@@ -126,6 +139,34 @@ func TestGetOneCountryWrongPath(t *testing.T) {
 	defer server.Close()
 
 	url := server.URL + Assignment2.HISTORY_PATH
+	response, err := http.Get(url)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+}
+
+// TestGetNeighborCountry tests the current endpoint if ...
+func TestGetNeighborCountry(t *testing.T) {
+	InitFirebase()
+
+	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.CURRENT_PATH + "AZE?neighbours=true"
+	response, err := http.Get(url)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+}
+
+// TestRenewablesHandlerInvalidBool tests the current endpoint with invalid bool
+func TestRenewablesHandlerInvalidBool(t *testing.T) {
+	InitFirebase()
+
+	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.CURRENT_PATH + "AZE?neighbours=adhfkdjshhsd"
 	response, err := http.Get(url)
 
 	assert.Nil(t, err)

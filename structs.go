@@ -21,11 +21,11 @@ type CountryMean struct {
 }
 
 type WebhookGet struct {
-	WebhookID string `json:"webhook_id omitempty"`
+	WebhookID string `json:"webhook_id" omitempty:"true"`
 	Url       string `json:"url"`
 	Country   string `json:"country"`
 	Calls     int64  `json:"calls"`
-	Counter   int64  `json:"counter omitempty"`
+	Counter   int64  `json:"counter" omitempty:"true"`
 }
 
 type WebhookInvoke struct {

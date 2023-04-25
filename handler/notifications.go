@@ -9,6 +9,8 @@ import (
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"log"
 	"net/http"
 	"strings"
@@ -52,7 +54,11 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 		retrieveWebhook(w, r)
 	case http.MethodDelete:
 		deleteWebhook(w, r)
+	default:
+		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodPost+
+			"', '"+http.MethodGet+"' and '"+http.MethodDelete+"' are supported.", http.StatusNotImplemented)
 	}
+	return
 }
 
 // registerWebhook adds a webhook to Firestore db
@@ -70,9 +76,14 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 	// Initialize counter for invocation
 	newWebhook.Counter = 0
 
-	// Add element in embedded structure.
-	docRef, _, err := Client.Collection(collection).Add(ctx, newWebhook)
-	log.Println(docRef)
+	// Generate a new document reference
+	docRef := Client.Collection(collection).NewDoc()
+
+	// Set the generated ID in the webhook data struct
+	newWebhook.WebhookID = docRef.ID
+
+	// Add the webhook to the database with the generated ID
+	_, err = docRef.Set(ctx, newWebhook)
 	if err != nil {
 		// Error handling
 		log.Println("Error when adding Webhook to database: ", err.Error())
@@ -80,31 +91,28 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Store the generated ID in the webhook data struct
-	newWebhook.WebhookID = docRef.ID
-
-	// Update the document with the generated ID
-	_, err = Client.Collection(collection).Doc(docRef.ID).Update(ctx, []firestore.Update{{Path: "webhookId", Value: docRef.ID}})
-	if err != nil {
-		log.Println("Error when updating document with generated ID, Error: " + err.Error())
-		http.Error(w, "Error when updating document with generated ID, Error: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+	// Create a response body with the newly created webhook ID
 	// Return the newly created webhook ID in the response
 	resp := struct {
+		// WebhookID is the ID of the newly created webhook
 		WebhookID string `json:"webhookId"`
 	}{
 		WebhookID: docRef.ID,
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	jsonData, err := json.Marshal(resp)
-	if err != nil {
-		// handle error
-	}
-	w.Write(jsonData)
 
+	// Encode the response body and send it to the client
+	jsonResponse, err := json.Marshal(resp)
+	if err != nil {
+		log.Println("Error in encoding response body", err.Error())
+		http.Error(w, "Error in encoding response body", http.StatusBadRequest)
+		return
+	}
+	// Set the content type to JSON
+	w.Header().Set("Content-Type", "application/json")
+	// Set the status code to 201 (Created)
+	w.WriteHeader(http.StatusCreated)
+	// Write the response body
+	w.Write(jsonResponse)
 }
 
 // deleteDocument deletes a webhook from Firestore db
@@ -119,19 +127,27 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract the id from the URL
 	id := parts[4]
 
 	// Retrieve specific message based on id (Firestore-generated hash)
-	res := Client.Collection(collection).Doc(id)
+	docRef := Client.Collection(collection).Doc(id)
 
 	// Attempt to retrieve reference to document
-	doc, err := res.Get(ctx)
+	doc, err := docRef.Get(ctx)
 	if err != nil {
-		log.Println("Error extracting body of returned document of message " + id)
-		http.Error(w, "Error extracting body of returned document of message "+id, http.StatusInternalServerError)
-		return
+		if status.Code(err) == codes.NotFound {
+			log.Println("Document not found with ID: " + id)
+			http.Error(w, "Document not found with ID: "+id, http.StatusNotFound)
+			return
+		} else {
+			log.Println("Error extracting body of returned document of message " + id)
+			http.Error(w, "Error extracting body of returned document of message "+id, http.StatusInternalServerError)
+			return
+		}
 	}
 
+	// Create a buffer to store the document data
 	var data Assignment2.WebhookGet
 
 	// Get webhook to be deleted
@@ -142,20 +158,27 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.WebhookID = id
-
 	// Attempt to delete webhook from Firestore
-	_, err = res.Delete(ctx)
+	_, err = docRef.Delete(ctx)
 	if err != nil {
 		log.Println("Error deleting document " + id)
 		http.Error(w, "Error deleting document "+id, http.StatusInternalServerError)
 		return
 	}
 
-	log.Println("Document '" + id + "' deleted successfully")
-
+	// Marshal the data and write it to the response
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Println("Error marshaling document data: ", err.Error())
+		http.Error(w, "Error marshaling document data", http.StatusInternalServerError)
+		return
+	}
+	// Set the content type to JSON
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
+	// Set the status code to 200 (OK)
+	w.WriteHeader(http.StatusOK)
+	// Write the response body
+	w.Write(jsonData)
 }
 
 // retrieveDocument retrieves a webhook specified by an id, or all webhooks if no id
@@ -217,8 +240,20 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 			}
 
 		}
+
+		// Encode the response body and send it to the client
+		marshallResponse, err := json.Marshal(hooks)
+		if err != nil {
+			log.Println("Error in encoding response body", err.Error())
+			http.Error(w, "Error in encoding response body", http.StatusBadRequest)
+			return
+		}
+		// Set the content type to JSON
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(hooks)
+		// Set the status code to 201 (Created)
+		w.WriteHeader(http.StatusOK)
+		// Write the response body
+		w.Write(marshallResponse)
 	}
 }
 
