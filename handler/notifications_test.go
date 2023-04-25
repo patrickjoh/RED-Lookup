@@ -22,13 +22,14 @@ var sampleBody = map[string]interface{}{
 	"calls":   69,
 }
 
+// Testing the initialization of firebase
+func TestInitFirebase(t *testing.T) {
+	err := InitFirebase()
+	assert.Nil(t, err, "expected no error, error: %v", err)
+}
+
 // code adds to firebase successfully
 func TestRegisterWebhook(t *testing.T) {
-	log.Println("test register webhook currently running")
-
-	//initialise firebase connection
-	InitFirebase()
-
 	//covert sampleData to []bytes
 	data, err := json.MarshalIndent(sampleBody, "", " ")
 	if err != nil {
@@ -48,17 +49,13 @@ func TestRegisterWebhook(t *testing.T) {
 
 	handler.ServeHTTP(resp, request)
 
-	if resp.Code != http.StatusCreated {
-		log.Println("Status code: ", resp.Code)
-	}
-	log.Println("response here:", resp.Code)
-
 	// Check that the webhook was created successfully and get its ID
 	var responseBody map[string]string
 	require.Equal(t, http.StatusCreated, resp.Code)
 	_ = json.NewDecoder(resp.Body).Decode(&responseBody)
 	webhookID := responseBody["webhookId"]
 	DocRefID = webhookID
+
 	// Use the webhook ID to retrieve the webhook from Firestore
 	docRef := Client.Collection(collection).Doc(webhookID)
 	docSnapshot, err := docRef.Get(ctx)
@@ -77,8 +74,6 @@ func TestRegisterWebhook(t *testing.T) {
 
 // if correct id is given
 func TestRetrieveWebhookWithID(t *testing.T) {
-	log.Println("test retrive webhook currently running")
-
 	server := httptest.NewServer(http.HandlerFunc(NotificationsHandler))
 	defer server.Close()
 
@@ -101,28 +96,20 @@ func TestRetrieveWebhookWithID(t *testing.T) {
 
 	// Convert sampleBody to JSON format
 	expectedJsonData, err := json.Marshal(sampleBody)
-	if err != nil {
-		panic(err)
-	}
+	assert.Nil(t, err)
 
 	// Unmarshal JSON data into WebhookGet struct
 	var expectedWebhook structs.WebhookGet
 	err = json.Unmarshal(expectedJsonData, &expectedWebhook)
-	if err != nil {
-		panic(err)
-	}
+	assert.Nil(t, err)
 
 	assert.Equal(t, expectedWebhook, recievedResponse)
 }
 
 // if no id is given, it will then retrieve all the webhooks registered
 func TestRetrieveWebhookNoID(t *testing.T) {
-	log.Println("test retrieve webhook currently running")
-
 	request, err := http.NewRequest(http.MethodGet, Assignment2.NOTIFICATION_PATH, nil)
-	if err != nil {
-		log.Println("Error making request.")
-	}
+	assert.Nil(t, err)
 
 	resp := httptest.NewRecorder()
 
@@ -130,17 +117,11 @@ func TestRetrieveWebhookNoID(t *testing.T) {
 
 	handler.ServeHTTP(resp, request)
 
-	if resp.Code != http.StatusOK {
-		log.Println("Status code: ", resp.Code)
-	}
-	log.Println("response here:", resp.Code)
 	assert.Equal(t, http.StatusOK, resp.Code)
 }
 
 // if id is not found
 func TestRetrieveWebhookNonExisting(t *testing.T) {
-	log.Println("test retrieve webhook currently running")
-
 	server := httptest.NewServer(http.HandlerFunc(NotificationsHandler))
 	defer server.Close()
 
@@ -152,17 +133,11 @@ func TestRetrieveWebhookNonExisting(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.Nil(t, err)
 
-	if resp.StatusCode != http.StatusInternalServerError {
-		log.Println("Status code: ", resp.StatusCode)
-	}
-	log.Println("response here:", resp.StatusCode)
 	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 }
 
 // if correct id is given
 func TestDeleteWebhookWithID(t *testing.T) {
-	log.Println("test delete webhook currently running")
-
 	server := httptest.NewServer(http.HandlerFunc(NotificationsHandler))
 	defer server.Close()
 
@@ -174,30 +149,25 @@ func TestDeleteWebhookWithID(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.Nil(t, err)
 
-	if resp.StatusCode != http.StatusOK {
-		log.Println("Status code: ", resp.StatusCode)
-	}
-	log.Println("response here:", resp.StatusCode)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var recievedResponse map[string]interface{}
+	var recievedResponse structs.WebhookGet
 	_ = json.NewDecoder(resp.Body).Decode(&recievedResponse)
 
 	// Convert sampleBody to JSON format
 	expectedJsonData, err := json.Marshal(sampleBody)
-	if err != nil {
-		panic(err)
-	}
-	print(expectedJsonData)
-	print(recievedResponse)
+	assert.Nil(t, err)
 
-	assert.Equal(t, sampleBody, recievedResponse)
+	// Unmarshal JSON data into WebhookGet struct
+	var expectedWebhook structs.WebhookGet
+	err = json.Unmarshal(expectedJsonData, &expectedWebhook)
+	assert.Nil(t, err)
+
+	assert.Equal(t, expectedWebhook, recievedResponse)
 }
 
 // if no id is given
 func TestDeleteWebhookNoID(t *testing.T) {
-	log.Println("test delete webhook currently running")
-
 	request, err := http.NewRequest(http.MethodDelete, Assignment2.NOTIFICATION_PATH, nil)
 	if err != nil {
 		log.Println("Error making request.")
@@ -209,19 +179,11 @@ func TestDeleteWebhookNoID(t *testing.T) {
 
 	handler.ServeHTTP(resp, request)
 
-	if resp.Code != http.StatusBadRequest {
-		log.Println("Status code: ", resp.Code)
-	}
-	log.Println("response here:", resp.Code)
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
 }
 
 // if id is not found
 func TestDeleteWebhookNonExistingID(t *testing.T) {
-	log.Println("test delete webhook currently running")
-
-	//InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(NotificationsHandler))
 	defer server.Close()
 
@@ -233,9 +195,5 @@ func TestDeleteWebhookNonExistingID(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.Nil(t, err)
 
-	if resp.StatusCode != http.StatusNotFound {
-		log.Println("Status code: ", resp.StatusCode)
-	}
-	log.Println("response here:", resp.StatusCode)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
