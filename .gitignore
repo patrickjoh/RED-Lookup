@@ -1,5 +1,6 @@
 # Default ignored files
 /firebase.json
+/handler/firebase.json
 /shelf/
 /workspace.xml
 # Editor-based HTTP Client requests

@@ -2,15 +2,14 @@ package handler
 
 import (
 	"Assignment2"
+	"Assignment2/structs"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 )
 
@@ -64,7 +63,7 @@ func TestRegisterWebhook(t *testing.T) {
 	docRef := Client.Collection(collection).Doc(webhookID)
 	docSnapshot, err := docRef.Get(ctx)
 	require.NoError(t, err)
-	var retrievedWebhook Assignment2.WebhookGet
+	var retrievedWebhook structs.WebhookGet
 	err = docSnapshot.DataTo(&retrievedWebhook)
 	require.NoError(t, err)
 
@@ -97,32 +96,28 @@ func TestRetrieveWebhookWithID(t *testing.T) {
 	log.Println("response here:", resp.StatusCode)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	log.Println("hello: ")
+	var recievedResponse structs.WebhookGet
+	_ = json.NewDecoder(resp.Body).Decode(&recievedResponse)
 
-	// Use the webhook ID to retrieve the webhook from Firestore
-	docRef := Client.Collection(collection).Doc(DocRefID)
-	docSnapshot, err := docRef.Get(ctx)
-	require.NoError(t, err)
-	var retrievedWebhook Assignment2.WebhookGet
-	err = docSnapshot.DataTo(&retrievedWebhook)
-	require.NoError(t, err)
-
-	calls, err := strconv.Atoi(sampleBody["calls"].(string))
+	// Convert sampleBody to JSON format
+	expectedJsonData, err := json.Marshal(sampleBody)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 
-	// Check that the retrieved webhook has the expected properties
-	assert.Equal(t, sampleBody["url"], retrievedWebhook.Url)
-	assert.Equal(t, sampleBody["col"], retrievedWebhook.Country)
-	assert.Equal(t, int64(calls), retrievedWebhook.Calls)
-	assert.Equal(t, int64(0), retrievedWebhook.Counter)
-	assert.Equal(t, "", retrievedWebhook.WebhookID)
+	// Unmarshal JSON data into WebhookGet struct
+	var expectedWebhook structs.WebhookGet
+	err = json.Unmarshal(expectedJsonData, &expectedWebhook)
+	if err != nil {
+		panic(err)
+	}
+
+	assert.Equal(t, expectedWebhook, recievedResponse)
 }
 
-// if no id is given
+// if no id is given, it will then retrieve all the webhooks registered
 func TestRetrieveWebhookNoID(t *testing.T) {
-	log.Println("test retrive webhook currently running")
+	log.Println("test retrieve webhook currently running")
 
 	request, err := http.NewRequest(http.MethodGet, Assignment2.NOTIFICATION_PATH, nil)
 	if err != nil {
@@ -144,7 +139,7 @@ func TestRetrieveWebhookNoID(t *testing.T) {
 
 // if id is not found
 func TestRetrieveWebhookNonExisting(t *testing.T) {
-	log.Println("test retrive webhook currently running")
+	log.Println("test retrieve webhook currently running")
 
 	server := httptest.NewServer(http.HandlerFunc(NotificationsHandler))
 	defer server.Close()
@@ -168,8 +163,6 @@ func TestRetrieveWebhookNonExisting(t *testing.T) {
 func TestDeleteWebhookWithID(t *testing.T) {
 	log.Println("test delete webhook currently running")
 
-	//InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(NotificationsHandler))
 	defer server.Close()
 
@@ -185,7 +178,20 @@ func TestDeleteWebhookWithID(t *testing.T) {
 		log.Println("Status code: ", resp.StatusCode)
 	}
 	log.Println("response here:", resp.StatusCode)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var recievedResponse map[string]interface{}
+	_ = json.NewDecoder(resp.Body).Decode(&recievedResponse)
+
+	// Convert sampleBody to JSON format
+	expectedJsonData, err := json.Marshal(sampleBody)
+	if err != nil {
+		panic(err)
+	}
+	print(expectedJsonData)
+	print(recievedResponse)
+
+	assert.Equal(t, sampleBody, recievedResponse)
 }
 
 // if no id is given
@@ -227,9 +233,9 @@ func TestDeleteWebhookNonExistingID(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.Nil(t, err)
 
-	if resp.StatusCode != http.StatusInternalServerError {
+	if resp.StatusCode != http.StatusNotFound {
 		log.Println("Status code: ", resp.StatusCode)
 	}
 	log.Println("response here:", resp.StatusCode)
-	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
