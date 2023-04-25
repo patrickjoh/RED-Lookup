@@ -63,7 +63,6 @@ func TestGetOneCountry(t *testing.T) {
 
 // TestCurrentRenewTooManyParts tests current endpoint if there are too many parts
 func TestCurrentRenewTooManyParts(t *testing.T) {
-
 	InitFirebase()
 
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
@@ -130,4 +129,18 @@ func TestGetOneCountryWrongPath(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+}
+
+// TestGetNeighborCountry tests the current endpoint if ...
+func TestGetNeighborCountry(t *testing.T) {
+	InitFirebase()
+
+	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.CURRENT_PATH + "AZE?neighbours=true"
+	response, err := http.Get(url)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
 }
