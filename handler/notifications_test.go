@@ -28,20 +28,15 @@ func TestInitFirebase(t *testing.T) {
 	assert.Nil(t, err, "expected no error, error: %v", err)
 }
 
-// code adds to firebase successfully
+// test successful registerWebhook add to firebase successfully
 func TestRegisterWebhook(t *testing.T) {
 	//covert sampleData to []bytes
 	data, err := json.MarshalIndent(sampleBody, "", " ")
-	if err != nil {
-		log.Println("Error marshalling body.")
-	}
 	assert.Nil(t, err)
 
 	//create request
 	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(data))
-	if err != nil {
-		log.Println("Error making request.")
-	}
+	assert.Nil(t, err)
 
 	resp := httptest.NewRecorder()
 
@@ -70,6 +65,23 @@ func TestRegisterWebhook(t *testing.T) {
 	assert.Equal(t, int64(69), retrievedWebhook.Calls)
 	assert.Equal(t, int64(0), retrievedWebhook.Counter)
 	assert.Equal(t, "", retrievedWebhook.WebhookID)
+}
+
+// test unsuccessful testRegisterWebhook add fail
+func TestRegisterWebhookNoValue(t *testing.T) {
+	//create request
+	sample := []byte(`{"url": "https://example.com"}`)
+	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(sample))
+	assert.Nil(t, err)
+
+	resp := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(NotificationsHandler)
+
+	handler.ServeHTTP(resp, request)
+
+	// Check that the webhook was created successfully and get its ID
+	require.Equal(t, http.StatusBadRequest, resp.Code)
 }
 
 // if correct id is given
