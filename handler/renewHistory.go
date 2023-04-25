@@ -49,7 +49,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 	sortByValue := params.Get("sortByValue")
-
 	// Error and logic check for beginning and end of year
 	if begin == "" && end == "" {
 		begin = "0"
@@ -72,23 +71,28 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Find all entries for a given country if an Iso code has been specified
 	if iso != "" {
 		countryIterators = findCountry(countryIterators, iso) // Slice of one country's history
-		UpdateAndInvoke(iso)                                  // UWU maybe work, maybe not????
+		//UpdateAndInvoke(iso)                                  // UWU maybe work, maybe not????
 	}
 	// Find country's history from year(begin to end)
 	for _, col := range countryIterators {
-		if col.Year <= endYear && col.Year >= startYear {
-			newHisData := Assignment2.CountryData{
-				Name:       col.Name,
-				IsoCode:    col.IsoCode,
-				Year:       col.Year,
-				Percentage: col.Percentage,
+		if len(col.IsoCode) == 3 {
+			if col.Year <= endYear && col.Year >= startYear {
+				newHisData := Assignment2.CountryData{
+					Name:       col.Name,
+					IsoCode:    col.IsoCode,
+					Year:       col.Year,
+					Percentage: col.Percentage,
+				}
+				countData = append(countData, newHisData)
 			}
-			countData = append(countData, newHisData)
 		}
 	}
 
 	// If no country is found
+
+	log.Println("countData length: ", len(countData))
 	if len(countData) < 1 {
+		log.Println("No entry with matching credentials found")
 		http.Error(w, "No entry with matching credentials found", http.StatusNotFound)
 		return
 	}
@@ -151,7 +155,7 @@ func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.Coun
 				IsoCode:    current.IsoCode,
 				Percentage: mean,
 			}
-			UpdateAndInvoke(countryMean.IsoCode) // UWU maybe work, maybe not???
+			//UpdateAndInvoke(countryMean.IsoCode) // UWU maybe work, maybe not???
 			// appends country to slice of countries
 			retData = append(retData, countryMean)
 		}
