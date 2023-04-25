@@ -30,32 +30,34 @@ func TestRegisterWebhook(t *testing.T) {
 	//initialise firebase connection
 	InitFirebase()
 
+	//covert sampleData to []bytes
 	data, err := json.MarshalIndent(sampleBody, "", " ")
 	if err != nil {
 		log.Println("Error marshalling body.")
 	}
 	assert.Nil(t, err)
 
+	//create request
 	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(data))
 	if err != nil {
 		log.Println("Error making request.")
 	}
 
-	responseR := httptest.NewRecorder()
+	resp := httptest.NewRecorder()
 
 	handler := http.HandlerFunc(NotificationsHandler)
 
-	handler.ServeHTTP(responseR, request)
+	handler.ServeHTTP(resp, request)
 
-	if responseR.Code != http.StatusCreated {
-		log.Println("Status code: ", responseR.Code)
+	if resp.Code != http.StatusCreated {
+		log.Println("Status code: ", resp.Code)
 	}
-	log.Println("response here:", responseR.Code)
+	log.Println("response here:", resp.Code)
 
 	// Check that the webhook was created successfully and get its ID
 	var responseBody map[string]string
-	require.Equal(t, http.StatusCreated, responseR.Code)
-	_ = json.NewDecoder(responseR.Body).Decode(&responseBody)
+	require.Equal(t, http.StatusCreated, resp.Code)
+	_ = json.NewDecoder(resp.Body).Decode(&responseBody)
 	webhookID := responseBody["webhookId"]
 	DocRefID = webhookID
 	// Use the webhook ID to retrieve the webhook from Firestore
@@ -127,17 +129,17 @@ func TestRetrieveWebhookNoID(t *testing.T) {
 		log.Println("Error making request.")
 	}
 
-	responseR := httptest.NewRecorder()
+	resp := httptest.NewRecorder()
 
 	handler := http.HandlerFunc(NotificationsHandler)
 
-	handler.ServeHTTP(responseR, request)
+	handler.ServeHTTP(resp, request)
 
-	if responseR.Code != http.StatusOK {
-		log.Println("Status code: ", responseR.Code)
+	if resp.Code != http.StatusOK {
+		log.Println("Status code: ", resp.Code)
 	}
-	log.Println("response here:", responseR.Code)
-	assert.Equal(t, http.StatusOK, responseR.Code)
+	log.Println("response here:", resp.Code)
+	assert.Equal(t, http.StatusOK, resp.Code)
 }
 
 // if id is not found
@@ -195,17 +197,17 @@ func TestDeleteWebhookNoID(t *testing.T) {
 		log.Println("Error making request.")
 	}
 
-	responseR := httptest.NewRecorder()
+	resp := httptest.NewRecorder()
 
 	handler := http.HandlerFunc(NotificationsHandler)
 
-	handler.ServeHTTP(responseR, request)
+	handler.ServeHTTP(resp, request)
 
-	if responseR.Code != http.StatusBadRequest {
-		log.Println("Status code: ", responseR.Code)
+	if resp.Code != http.StatusBadRequest {
+		log.Println("Status code: ", resp.Code)
 	}
-	log.Println("response here:", responseR.Code)
-	assert.Equal(t, http.StatusBadRequest, responseR.Code)
+	log.Println("response here:", resp.Code)
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
 }
 
 // if id is not found
