@@ -50,6 +50,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 	sortByValue := params.Get("sortByValue")
+
 	// Error and logic check for beginning and end of year
 	if begin == "" && end == "" {
 		begin = "0"
