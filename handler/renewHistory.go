@@ -71,7 +71,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Find all entries for a given country if an Iso code has been specified
 	if iso != "" {
 		countryIterators = findCountry(countryIterators, iso) // Slice of one country's history
-		//UpdateAndInvoke(iso)                                  // UWU maybe work, maybe not????
+		UpdateAndInvoke(iso)                                  // UWU maybe work, maybe not????
 	}
 	// Find country's history from year(begin to end)
 	for _, col := range countryIterators {
@@ -155,7 +155,7 @@ func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.Coun
 				IsoCode:    current.IsoCode,
 				Percentage: mean,
 			}
-			//UpdateAndInvoke(countryMean.IsoCode) // UWU maybe work, maybe not???
+			UpdateAndInvoke(countryMean.IsoCode) // UWU maybe work, maybe not???
 			// appends country to slice of countries
 			retData = append(retData, countryMean)
 		}
