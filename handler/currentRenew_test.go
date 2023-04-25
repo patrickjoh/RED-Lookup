@@ -117,3 +117,17 @@ func TestGetOneCountryNonExistingIso(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 }
+
+// TestGetOneCountryNonExistingIso tests the current endpoint if a non-existing iso code is provided
+func TestGetOneCountryWrongPath(t *testing.T) {
+	InitFirebase()
+
+	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.HISTORY_PATH
+	response, err := http.Get(url)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+}

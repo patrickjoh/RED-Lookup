@@ -31,7 +31,8 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 
 	// Error handling
 	if len(parts) < 5 || parts[4] != "current" {
-		log.Println(w, "Malformed URL", http.StatusBadRequest)
+		http.Error(w, "Malformed URL", http.StatusBadRequest)
+		log.Println("Malformed URL")
 		return
 	}
 
