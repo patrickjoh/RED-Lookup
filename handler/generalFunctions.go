@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// convertCsvData takes data from a csv file and converts it to a slice of structs
 func convertCsvData() []Assignment2.CountryData {
 	// Open CSV file
 	file, err := os.Open(Assignment2.CSV_PATH)
@@ -63,7 +64,7 @@ func convertCsvData() []Assignment2.CountryData {
 	return csvData
 }
 
-// Find all country data for a given ISO code
+// findCountry finds all entries in a struct slice that match the provided iso code
 func findCountry(countries []Assignment2.CountryData, Iso string) []Assignment2.CountryData {
 	var countryData []Assignment2.CountryData // empty list for the final data
 
@@ -83,9 +84,7 @@ func findCountry(countries []Assignment2.CountryData, Iso string) []Assignment2.
 	return countryData
 }
 
-/*
-function that gets all countries, decodes them and puts them in a slice. Returns the slice
-*/
+// getCountries gets all countries from RESTcountries and returns them as a slice of structs
 func getCountries(isoCode []string) ([]Assignment2.Country, error) {
 
 	countryUrl := Assignment2.COUNTRYAPI_CODES
