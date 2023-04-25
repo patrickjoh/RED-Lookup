@@ -1,17 +1,31 @@
 package Assignment2
 
+func init() {
+	// Find current working directory
+
+}
+
 // Url Paths as ant
 const (
+	// ENDPOINTS
 	DEFAULT_PATH      = "/"
 	CURRENT_PATH      = "/energy/v1/renewables/current/"
 	HISTORY_PATH      = "/energy/v1/renewables/history/"
 	NOTIFICATION_PATH = "/energy/v1/notifications/"
 	STATUS_PATH       = "/energy/v1/status/"
-	DEFAULT_PORT      = "8080"
-	STUB_PORT         = "8081"
-	CSV_PATH          = "handler/data/renewable-share-energy.csv"
-	COUNTRYAPI_CODES  = "http://129.241.150.113:8080/v3.1/alpha?codes="
+
+	// PORTS
+	DEFAULT_PORT = "8080"
+	STUB_PORT    = "8081"
+
+	// EXTERNAL API
+	COUNTRYAPI_CODES = "http://129.241.150.113:8080/v3.1/alpha?codes="
+
+	// STUB ENDPOINTS
 	//STUB_COUNTRY      = "http://localhost:8081/Country/" // Stubbed handler for country data
 	//STUB_NEIGHBOURS   = "http://localhost:8081/Neighbour/" // Stubbed handler for neighbour data
-	FIRESTORE_CREDS = "firebase.json"
+
+	// DATA-FILES
+	CSV_PATH        = "handler/data/renewable-share-energy.csv" // CSV_PATH is the path to the CSV file
+	FIRESTORE_CREDS = "firebase.json"                           // FIRESTORE_CREDS is the path to the firestore credentials
 )

@@ -1,4 +1,4 @@
-package Assignment2
+package structs
 
 type StatusData struct {
 	CountriesAPI   string `json:"countries_api"`

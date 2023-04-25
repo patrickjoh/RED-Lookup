@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Assignment2"
+	"Assignment2/structs"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -49,7 +50,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 	sortByValue := params.Get("sortByValue")
-
 	// Error and logic check for beginning and end of year
 	if begin == "" && end == "" {
 		begin = "0"
@@ -64,10 +64,10 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var countData []Assignment2.CountryData // Empty list for the final data
+	var countData []structs.CountryData     // Empty list for the final data
 	startYear, _ := strconv.Atoi(begin)     // Convert beginning year to int
 	endYear, _ := strconv.Atoi(end)         // Convert end year to int
-	countryIterators := convertCsvData()    // Read all countries data from csv
+	countryIterators := Assignment2.CSVData // Read all countries data from csv
 
 	// Find all entries for a given country if an Iso code has been specified
 	if iso != "" {
@@ -76,19 +76,24 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	}
 	// Find country's history from year(begin to end)
 	for _, col := range countryIterators {
-		if col.Year <= endYear && col.Year >= startYear {
-			newHisData := Assignment2.CountryData{
-				Name:       col.Name,
-				IsoCode:    col.IsoCode,
-				Year:       col.Year,
-				Percentage: col.Percentage,
+		if len(col.IsoCode) == 3 {
+			if col.Year <= endYear && col.Year >= startYear {
+				newHisData := structs.CountryData{
+					Name:       col.Name,
+					IsoCode:    col.IsoCode,
+					Year:       col.Year,
+					Percentage: col.Percentage,
+				}
+				countData = append(countData, newHisData)
 			}
-			countData = append(countData, newHisData)
 		}
 	}
 
 	// If no country is found
+
+	log.Println("countData length: ", len(countData))
 	if len(countData) < 1 {
+		log.Println("No entry with matching credentials found")
 		http.Error(w, "No entry with matching credentials found", http.StatusNotFound)
 		return
 	}
@@ -125,8 +130,8 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 
 // getAllCountriesMean gets all countries, checks for redundancy and returns a struct of
 // all countries with mean percentage of their renewable energy
-func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.CountryMean {
-	var retData []Assignment2.CountryMean
+func getAllCountriesMean(countries []structs.CountryData) []structs.CountryMean {
+	var retData []structs.CountryMean
 	lastCountry := ""
 	// going through all countries
 	for _, current := range countries {
@@ -146,7 +151,7 @@ func getAllCountriesMean(countries []Assignment2.CountryData) []Assignment2.Coun
 			// calculates mean percentage of a country
 			mean = mean / numberInstances
 			// initiates a country struct with the mean percentage
-			countryMean := Assignment2.CountryMean{
+			countryMean := structs.CountryMean{
 				Name:       current.Name,
 				IsoCode:    current.IsoCode,
 				Percentage: mean,

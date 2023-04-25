@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Assignment2"
+	"Assignment2/structs"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -36,14 +37,14 @@ func TestHandleHistoryGet(t *testing.T) {
 	}
 
 	// Decode array
-	result := []Assignment2.CountryData{}
+	result := []structs.CountryData{}
 	err2 := json.NewDecoder(res.Body).Decode(&result)
 	if err2 != nil {
 		t.Fatal("Error during decoding:", err2.Error())
 	}
 
 	//Expected output
-	expected := []Assignment2.CountryData{
+	expected := []structs.CountryData{
 		{Name: "Norway", IsoCode: "NOR", Year: 1990, Percentage: 72.44774},
 		{Name: "Norway", IsoCode: "NOR", Year: 1991, Percentage: 71.44005},
 		{Name: "Norway", IsoCode: "NOR", Year: 1992, Percentage: 71.865555},

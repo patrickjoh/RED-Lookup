@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Assignment2"
+	"Assignment2/structs"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -49,7 +50,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	if neighbourStr == "" {
 		neighbourBool = false
 	}
-	var countryData []Assignment2.CountryData
+	var countryData []structs.CountryData
 
 	// If the country code is provided
 	if len(parts) == 6 {
@@ -76,7 +77,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Fetching data for one country, possibly with neighbors
-			countryData = getOneCountry(convertCsvData(), isoCodes)
+			countryData = getOneCountry(Assignment2.CSVData, isoCodes)
 
 			// No country found with matching data
 			if len(countryData) < 2 && countryData[0].Name == "" {
@@ -86,7 +87,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else if len(parts) == 5 { // If no country code is provided
-		countryData = getAllCountries(convertCsvData())
+		countryData = getAllCountries(Assignment2.CSVData)
 
 	} else { // If the URL is malformed
 		log.Println("Malformed URL")
@@ -105,8 +106,8 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // getAllCountries retrieves the most recent entries for all countries.
-func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
-	mostRecentData := make(map[string]Assignment2.CountryData)
+func getAllCountries(data []structs.CountryData) []structs.CountryData {
+	mostRecentData := make(map[string]structs.CountryData)
 
 	// Finding entries with the most recent year
 	for _, current := range data {
@@ -116,7 +117,7 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 		}
 	}
 
-	var retData []Assignment2.CountryData // Slice to hold the most recent entry for each country
+	var retData []structs.CountryData // Slice to hold the most recent entry for each country
 	for _, record := range mostRecentData {
 		//UpdateAndInvoke(record.IsoCode)   // UWU not certain if work??
 		retData = append(retData, record) // Adding the most recent entry for each country to a slice
@@ -133,15 +134,15 @@ func getAllCountries(data []Assignment2.CountryData) []Assignment2.CountryData {
 // getOneCountry retrieves the latest entries for a given country, and if the neighbours
 // parameter is set to true, it also retrieves the latest entries for the countries
 // that share a border with the given country.
-func getOneCountry(data []Assignment2.CountryData, isoCodes []string) []Assignment2.CountryData {
+func getOneCountry(data []structs.CountryData, isoCodes []string) []structs.CountryData {
 
 	if len(isoCodes) < 1 {
-		return []Assignment2.CountryData{}
+		return []structs.CountryData{}
 	}
 
-	var returnData []Assignment2.CountryData
-	currentHighestYear := 0                         // The currently highest year found
-	var currentHighestEntry Assignment2.CountryData // The struct with the currently highest year
+	var returnData []structs.CountryData        // Slice to hold the country data to be returned
+	currentHighestYear := 0                     // The currently highest year found
+	var currentHighestEntry structs.CountryData // The struct with the currently highest year
 
 	for _, iso := range isoCodes {
 		relCountries := findCountry(data, iso)
@@ -179,7 +180,7 @@ func getNeighborCountry(w http.ResponseWriter, IsoCode string) ([]string, error)
 	defer countryResponse.Body.Close()
 
 	// Struct to hold the response for the specified country
-	var specCountryData []Assignment2.Country
+	var specCountryData []structs.Country
 	// Decode the response body into the struct
 	err = json.NewDecoder(countryResponse.Body).Decode(&specCountryData)
 	if err != nil {

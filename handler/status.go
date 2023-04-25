@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Assignment2"
+	"Assignment2/structs"
 	"encoding/json"
 	"fmt"
 	"google.golang.org/api/iterator"
@@ -69,7 +70,7 @@ func handleStatus(w http.ResponseWriter) {
 	elapsedSeconds := int(elapsed.Seconds())
 
 	// Get status codes from response structs
-	stData := Assignment2.StatusData{
+	stData := structs.StatusData{
 		CountriesAPI:   restResp.Status,
 		NotificationSB: fireStoreAvail,
 		Webhooks:       numOfHooks,

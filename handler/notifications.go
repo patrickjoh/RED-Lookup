@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Assignment2"
+	"Assignment2/structs"
 	"bytes"
 	"cloud.google.com/go/firestore"
 	"context"
@@ -27,9 +28,7 @@ const collection = "webhooks"
 func InitFirebase() error {
 	ctx = context.Background()
 
-	// Replace "path/to/your-service-account-key.json" with the actual path to your service account key file.
-	credentials := Assignment2.FIRESTORE_CREDS
-	opt := option.WithCredentialsFile(credentials)
+	opt := option.WithCredentialsJSON(Assignment2.FirebaseCredentials)
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
 		log.Fatalf("Failed to create a new Firebase app: %v", err)
@@ -41,7 +40,6 @@ func InitFirebase() error {
 		log.Fatalf("Failed to create a new Firestore client: %v", err)
 		return err
 	}
-
 	return nil
 }
 
@@ -65,11 +63,38 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 func registerWebhook(w http.ResponseWriter, r *http.Request) {
 
 	// Decode the request body into a webhook struct
-	var newWebhook Assignment2.WebhookGet
+	var newWebhook structs.WebhookGet
 	err := json.NewDecoder(r.Body).Decode(&newWebhook)
 	if err != nil {
 		log.Println("Error in decoding request body", err.Error())
 		http.Error(w, "Error in processing request body", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the POST request contains a valid json body
+	if newWebhook.Url == "" {
+		log.Println("Invalid URL: empty")
+		http.Error(w, "Invalid URL: empty", http.StatusBadRequest)
+		return
+	}
+
+	matchingCountry := findCountry(Assignment2.CSVData, newWebhook.Country)
+	validCountry := false
+	// Check if the country is valid
+	if len(matchingCountry) > 0 {
+		validCountry = true
+	}
+	// Returns an error if the country is invalid
+	if validCountry == false {
+		log.Println("Invalid Country: " + newWebhook.Country)
+		http.Error(w, "Invalid Country: "+newWebhook.Country, http.StatusBadRequest)
+		return
+	}
+
+	// Check if the calls is valid
+	if newWebhook.Calls <= 0 {
+		log.Println("Invalid Calls: must be greater than 0")
+		http.Error(w, "Invalid Calls: must be greater than 0", http.StatusBadRequest)
 		return
 	}
 
@@ -148,7 +173,7 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a buffer to store the document data
-	var data Assignment2.WebhookGet
+	var data structs.WebhookGet
 
 	// Get webhook to be deleted
 	err = doc.DataTo(&data)
@@ -212,7 +237,7 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 		// Retrieve all webhooks if no id is provided
 		iter := Client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
 
-		var hooks []Assignment2.WebhookGet
+		var hooks []structs.WebhookGet
 
 		for {
 			doc, err := iter.Next()
@@ -229,7 +254,7 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 
 			if m["Calls"] != nil {
 
-				newHook := Assignment2.WebhookGet{
+				newHook := structs.WebhookGet{
 					WebhookID: m["WebhookID"].(string),
 					Url:       m["Url"].(string),
 					Country:   m["Country"].(string),
@@ -262,7 +287,7 @@ func UpdateAndInvoke(isoCode string) {
 	// Get all webhooks from Firestore
 	iter := Client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
 
-	var hooks []Assignment2.WebhookGet
+	var hooks []structs.WebhookGet
 
 	for {
 		doc, err := iter.Next()
@@ -279,7 +304,7 @@ func UpdateAndInvoke(isoCode string) {
 
 		if m["Calls"] != nil {
 
-			newHook := Assignment2.WebhookGet{
+			newHook := structs.WebhookGet{
 				WebhookID: m["WebhookID"].(string),
 				Url:       m["Url"].(string),
 				Country:   m["Country"].(string),
@@ -313,11 +338,11 @@ func UpdateAndInvoke(isoCode string) {
 	}
 }
 
-func invokeWebhook(invoke Assignment2.WebhookGet) {
+func invokeWebhook(invoke structs.WebhookGet) {
 
 	id := invoke.WebhookID
 
-	data := Assignment2.WebhookInvoke{
+	data := structs.WebhookInvoke{
 		WebhookID: id,
 		Country:   invoke.Country,
 		Calls:     invoke.Calls,
@@ -326,7 +351,7 @@ func invokeWebhook(invoke Assignment2.WebhookGet) {
 	payload, _ := json.Marshal(data)
 	log.Println("Attempting invocation of url " + invoke.Url + " with content '" + "payload" + "'.")
 	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
-	_, err := http.Post(invoke.Url, "application/json", bytes.NewReader([]byte(payload)))
+	_, err := http.Post(invoke.Url, "application/json", bytes.NewReader(payload))
 	if err != nil {
 		log.Println("Error during request creation. Error:", err)
 		return
