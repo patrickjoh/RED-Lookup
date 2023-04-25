@@ -32,10 +32,10 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 
 // handleStatus: shows availability for all third party services
 func handleStatus(w http.ResponseWriter) {
-	// Define the URLs
+	// Define the URL
 	restURL := "http://129.241.150.113:8080/"
 
-	// open CSV file
+	// Open CSV file
 	fd, err := os.Open(Assignment2.CSV_PATH)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error opening CSV file: %s", err.Error()), http.StatusInternalServerError)
