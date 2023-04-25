@@ -324,7 +324,7 @@ Users can register webhooks that are triggered by the service based on specified
 
 ```http
 Method: POST
-Path: /energy/v1/notifications
+Path: /energy/v1/notifications/
 ```
 * Content-Type: `application/json`
 

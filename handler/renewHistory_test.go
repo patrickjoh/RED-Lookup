@@ -11,17 +11,26 @@ import (
 // Local URL
 const URL = "http://localhost:" + Assignment2.DEFAULT_PORT
 
+//test for status kode/error handling
+/*
+func TestHandleIsoCode(t *testing.T) {
+	res, err := http.Get(URL + "/" + Assignment2.HISTORY_PATH + "/" + "NORE")
+	if err != nil {
+		t.Fatal("Isocode not accepted:", err.Error())
+	}
+	StatCode := httptest.NewRecorder()
+}
+
 /*
 TestHandleHistoryGet tests the handleHistoryGet function
 */
-
 func TestHandleHistoryGet(t *testing.T) {
 	// Create some sample country data
 	// Create client instance
 	client := http.Client{}
 
 	// Retrieve content from server
-	res, err := client.Get(URL + "/" + Assignment2.HISTORY_PATH + "/" + "NOR" + "?begin=1990&end=1992")
+	res, err := client.Get(URL + Assignment2.HISTORY_PATH + "NOR" + "?begin=1990&end=1992")
 	if err != nil {
 		t.Fatal("Get request to URL failed. Check whether server has been started manually! Error:", err.Error())
 	}
@@ -39,7 +48,7 @@ func TestHandleHistoryGet(t *testing.T) {
 		{Name: "Norway", IsoCode: "NOR", Year: 1991, Percentage: 71.44005},
 		{Name: "Norway", IsoCode: "NOR", Year: 1992, Percentage: 71.865555},
 	}
-
+	// Check the results
 	assert.Equal(t, expected, result)
 
 }
