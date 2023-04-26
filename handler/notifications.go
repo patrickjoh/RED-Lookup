@@ -108,7 +108,7 @@ func SyncCacheToFirebase() {
 
 	}
 	if updatedWebhooksCount > 0 {
-		// Sends the batch request to firestore
+		// Sends the batch request to Firebase
 		batch.Flush()
 	}
 
@@ -250,9 +250,9 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	id := parts[4]
 
 	// Attempt to retrieve webhook from the in-memory cache
-	webhookCache.RLock()
+	webhookCache.Lock()
 	data, ok := webhookCache.cache[id]
-	webhookCache.RUnlock()
+	webhookCache.Unlock()
 	if !ok {
 		log.Println("Webhook not found with ID: " + id)
 		http.Error(w, "Webhook not found with ID: "+id, http.StatusNotFound)
