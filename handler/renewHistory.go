@@ -30,7 +30,6 @@ func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Split url to get keyword
 	urlKeywords := strings.Split(r.URL.Path, "/")
-
 	iso := urlKeywords[5]   // Get country isoCode from url
 	query := r.URL.RawQuery // Get the queries from url
 
@@ -41,6 +40,8 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the query string into a map
 	params, err := url.ParseQuery(query)
+	log.Println("params: ", params)
+	//UWU kom tilbake til
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -105,10 +106,15 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 			return countData[i].Percentage < countData[j].Percentage
 		})
 	}
-
+	log.Println("UWU")
 	// If no Iso is given print all countries mean percentage else print one country's history
 	if iso == "" {
 		countMean := getAllCountriesMean(countData) // get all countries mean percentage
+		if countMean == nil {
+			log.Println("Error getting mean values")
+			http.Error(w, "Error getting mean values", http.StatusNotFound)
+			return
+		}
 
 		jsonResponse, err := json.Marshal(countMean)
 		if err != nil {
@@ -118,6 +124,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonResponse)
 	} else {
+		log.Println("UWU 2")
 		jsonResponse, err := json.Marshal(countData)
 		if err != nil {
 			log.Fatal(err)
@@ -126,6 +133,8 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		UpdateAndInvoke(countData[1].IsoCode)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonResponse)
+
+		log.Println("UWU 10")
 	}
 }
 
