@@ -25,8 +25,8 @@ func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleHistoryGet returns renewables for a given country in a provided range, or
-// if no country is specified returns the mean of the renewables for all countries by calling.
-// It also sorts the data by percentage in descending order
+// if no country is specified returns the mean of the renewables for all countries by calling
+// getAllCountriesMean(). It also sorts the data by percentage in descending order
 func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Split url to get keyword
 	urlKeywords := strings.Split(r.URL.Path, "/")
@@ -34,7 +34,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	iso := urlKeywords[5]   // Get country isoCode from url
 	query := r.URL.RawQuery // Get the queries from url
 
-	// Iso must either be nothing or consist of three letters
 	if len(iso) != 3 && len(iso) != 0 {
 		http.Error(w, "Malformed URL", http.StatusBadRequest)
 		return
@@ -51,75 +50,75 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 	sortByValue := params.Get("sortByValue")
-
-	if begin > end && end != "" {
+	// Error and logic check for beginning and end of year
+	if begin == "" && end == "" {
+		begin = "0"
+		end = "3000"
+	} else if end == "" {
+		end = begin
+	} else if begin == "" {
+		begin = end
+	} else if begin > end {
 		log.Printf("begining year (%s) > ending year(%s)", begin, end)
-		http.Error(w, "Incorrect use of year. Try history/{country?}{?begin=year&end=year?}", http.StatusBadRequest)
+		http.Error(w, "Incorrect use of year", http.StatusBadRequest)
 		return
 	}
 
-	var rangedCountries []structs.CountryData
-	var startYear = 0
-	var endYear = 3000
+	var countData []structs.CountryData              // Empty list for the final data
+	startYear, _ := strconv.Atoi(begin)              // Convert beginning year to int
+	endYear, _ := strconv.Atoi(end)                  // Convert end year to int
+	countryIterators := Assignment2.ConvertCsvData() // Read all countries data from csv
+
+	// Find all entries for a given country if an Iso code has been specified
+	if iso != "" {
+		countryIterators = findCountry(countryIterators, iso) // Slice of one country's history
+		UpdateAndInvoke(iso)                                  // UWU maybe work, maybe not????
+	}
+	// Find country's history from year(begin to end)
+	for _, col := range countryIterators {
+		if len(col.IsoCode) == 3 {
+			if col.Year <= endYear && col.Year >= startYear {
+				newHisData := structs.CountryData{
+					Name:       col.Name,
+					IsoCode:    col.IsoCode,
+					Year:       col.Year,
+					Percentage: col.Percentage,
+				}
+				countData = append(countData, newHisData)
+			}
+		}
+	}
+
+	// If no country is found
+
+	log.Println("countData length: ", len(countData))
+	if len(countData) < 1 {
+		log.Println("No entry with matching credentials found")
+		http.Error(w, "No entry with matching credentials found", http.StatusNotFound)
+		return
+	}
+
+	// If user want to sort by percentage
+	if sortByValue == "true" {
+		// Sorting the countData slice from lowest to highest by country percentage
+		sort.Slice(countData, func(i, j int) bool {
+			return countData[i].Percentage < countData[j].Percentage
+		})
+	}
 
 	// If no Iso is given print all countries mean percentage else print one country's history
 	if iso == "" {
-		rangedCountries = Assignment2.CSVData
-		if begin != "" && end == "" {
-			startYear, _ = strconv.Atoi(end)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.CSVData)
-		} else if end != "" && begin == "" {
-			endYear, _ = strconv.Atoi(end)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.CSVData)
-		}
+		countMean := getAllCountriesMean(countData) // get all countries mean percentage
 
-		resp := getAllCountriesMean(rangedCountries) // get all countries mean percentage
-
-		// If user want to sort by percentage
-		if sortByValue == "true" {
-			// Sorting the countData slice from lowest to highest by country percentage
-			sort.Slice(resp, func(i, j int) bool {
-				return resp[i].Percentage < resp[j].Percentage
-			})
-		}
-
-		jsonResponse, err := json.Marshal(resp)
+		jsonResponse, err := json.Marshal(countMean)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonResponse)
-	} else { // Only data for one country is returned
-
-		rangedCountries = findCountry(Assignment2.CSVData, iso)
-		if begin != "" && end == "" {
-			startYear, _ = strconv.Atoi(begin)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, rangedCountries)
-		} else if end != "" && begin == "" {
-			endYear, _ = strconv.Atoi(end)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, rangedCountries)
-		} else if begin != "" && end != "" {
-			startYear, _ = strconv.Atoi(begin)
-			endYear, _ = strconv.Atoi(end)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, rangedCountries)
-		}
-
-		// If user want to sort by percentage
-		if sortByValue == "true" {
-			// Sorting the countData slice from lowest to highest by country percentage
-			sort.Slice(rangedCountries, func(i, j int) bool {
-				return rangedCountries[i].Percentage < rangedCountries[j].Percentage
-			})
-		}
-
-		// If no country is found
-		if len(rangedCountries) < 1 {
-			http.Error(w, "No entry with matching credentials found", http.StatusNotFound)
-			return
-		}
-
-		jsonResponse, err := json.Marshal(rangedCountries)
+	} else {
+		jsonResponse, err := json.Marshal(countData)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -127,32 +126,11 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonResponse)
 	}
-}
-
-// getFromBeginToEnd finds all country data for all countries within a range
-func getFromBeginToEnd(begin int, end int, countryIterators []structs.CountryData) []structs.CountryData {
-
-	var returnData []structs.CountryData
-	// Find country's history from year(begin to end)
-	for _, col := range countryIterators {
-		// If year is within range
-		if col.Year <= end && col.Year >= begin {
-			newHisData := structs.CountryData{
-				Name:       col.Name,
-				IsoCode:    col.IsoCode,
-				Year:       col.Year,
-				Percentage: col.Percentage,
-			}
-			returnData = append(returnData, newHisData)
-		}
-	}
-	return returnData
 }
 
 // getAllCountriesMean gets all countries, checks for redundancy and returns a struct of
 // all countries with mean percentage of their renewable energy
 func getAllCountriesMean(countries []structs.CountryData) []structs.CountryMean {
-	// Variable that stores all countries with mean percentage
 	var retData []structs.CountryMean
 	lastCountry := ""
 	// going through all countries
