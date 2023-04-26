@@ -128,6 +128,28 @@ func PeriodicSyncCache() {
 	}
 }
 
+// RemoveExpiredWebhooks removes webhooks that are older than 30 days from Firestore and the in-memory cache
+func RemoveExpiredWebhooks() {
+	ticker := time.NewTicker(24 * time.Hour) // Check for expired webhooks every 24 hours
+	for range ticker.C {
+		now := time.Now()   // Get current time
+		webhookCache.Lock() // Lock the cache
+		for webhookID, webhook := range webhookCache.cache {
+			if now.Sub(webhook.Created) >= 30*24*time.Hour { // Webhook is older than 30 days, delete it from Firestore
+				docRef := Client.Collection(collection).Doc(webhookID) // Get the document reference
+				_, err := docRef.Delete(ctx)                           // Delete the document from Firestore
+				if err != nil {
+					log.Println("Error deleting expired webhook " + webhookID)
+				} else {
+					// Remove webhook from the in-memory cache
+					delete(webhookCache.cache, webhookID)
+				}
+			}
+		}
+		webhookCache.Unlock() // Unlock the cache
+	}
+}
+
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
@@ -187,15 +209,17 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 
 	newWebhook.WebhookID = docRef.ID // Set the generated ID in the webhook data struct
 	newWebhook.Modified = false      // Initialize modified flag
+	newWebhook.Created = time.Now()  // Set the creation timestamp
 
 	var firebaseWebhook structs.WebhookFirebase // Create a new webhook struct to store the data from the database
 
 	// Set the data from the request body to the new webhook struct
-	firebaseWebhook.WebhookID = newWebhook.WebhookID
-	firebaseWebhook.Url = newWebhook.Url
-	firebaseWebhook.Country = newWebhook.Country
-	firebaseWebhook.Calls = newWebhook.Calls
-	firebaseWebhook.Counter = newWebhook.Counter
+	firebaseWebhook.WebhookID = newWebhook.WebhookID // Set the generated ID in the webhook data struct
+	firebaseWebhook.Url = newWebhook.Url             // Set the user provided URL
+	firebaseWebhook.Country = newWebhook.Country     // Set the user provided country code
+	firebaseWebhook.Calls = newWebhook.Calls         // Set the user provided number of calls
+	firebaseWebhook.Counter = newWebhook.Counter     // Initialize counter for invocation
+	firebaseWebhook.Created = newWebhook.Created     // Set the creation timestamp
 
 	// Add the webhook to the database with the generated ID
 	_, err = docRef.Set(ctx, firebaseWebhook)
