@@ -10,9 +10,6 @@ import (
 	"testing"
 )
 
-// Local URL
-const URL = "http://localhost:" + Assignment2.DEFAULT_PORT
-
 // TestHandleHistoryGet Tests main functionality of the history handler via the getFromBeginToEnd function
 func TestHandleHistoryGet(t *testing.T) {
 	// Change current working directory to the directory where the test file is located
