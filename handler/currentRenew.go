@@ -157,7 +157,7 @@ func getOneCountry(data []structs.CountryData, isoCodes []string) []structs.Coun
 		currentHighestYear = 0
 
 		// Update counter for webhook invocation
-		//UpdateAndInvoke(iso)
+		UpdateAndInvoke(iso)
 	}
 
 	return returnData
@@ -208,6 +208,8 @@ func getNeighborCountry(w http.ResponseWriter, IsoCode string) ([]string, error)
 	// Append the border countries to the list of border countries
 	for _, country := range countryData {
 		borderCountries = append(borderCountries, country.Alpha3Code)
+		// Update counter for webhook invocation
+		UpdateAndInvoke(country.Alpha3Code)
 	}
 
 	// Return the list of border countries
