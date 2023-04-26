@@ -66,7 +66,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	if iso == "" {
 		rangedCountries = Assignment2.ConvertCsvData()
 		if begin != "" && end == "" {
-			startYear, _ = strconv.Atoi(end)
+			startYear, _ = strconv.Atoi(begin)
 			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.ConvertCsvData())
 		} else if end != "" && begin == "" {
 			endYear, _ = strconv.Atoi(end)
@@ -158,31 +158,31 @@ func getAllCountriesMean(countries []structs.CountryData) []structs.CountryMean 
 
 	var retData []structs.CountryMean
 	lastCountry := ""
-	// going through all countries
+	// Going through all countries
 	for _, current := range countries {
-		// makes sure there are no repeated countries
-		if current.IsoCode != lastCountry {
+		// Makes sure there are no repeated countries
+		if current.IsoCode != lastCountry && len(current.IsoCode) == 3 {
 			lastCountry = current.IsoCode
-			// variable that stores mean percentage
+			// Variable that stores mean percentage
 			var mean float64
-			// calls findCountry functions to get all instances of one country
+			// Calls findCountry functions to get all instances of one country
 			countryHistory := findCountry(countries, current.IsoCode)
-			// loops through all instances and adds their percentage to the mean variable
+			// Loops through all instances and adds their percentage to the mean variable
 			for _, currentYear := range countryHistory {
 				mean += currentYear.Percentage
 			}
-			// converts length of countryHistory slice into a float/number of instances
+			// Converts length of countryHistory slice into a float/number of instances
 			numberInstances := float64(len(countryHistory))
-			// calculates mean percentage of a country
+			// Calculates mean percentage of a country
 			mean = mean / numberInstances
-			// initiates a country struct with the mean percentage
+			// Initiates a country struct with the mean percentage
 			countryMean := structs.CountryMean{
 				Name:       current.Name,
 				IsoCode:    current.IsoCode,
 				Percentage: mean,
 			}
 			UpdateAndInvoke(countryMean.IsoCode) // UWU maybe work, maybe not???
-			// appends country to slice of countries
+			// Appends country to slice of countries
 			retData = append(retData, countryMean)
 		}
 	}
