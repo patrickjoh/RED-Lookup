@@ -26,15 +26,15 @@ const collection = "webhooks"
 // InitFirebase initializes the Firebase client and context.
 func InitFirebase() error {
 	ctx = context.Background()
-
-	opt := option.WithCredentialsJSON(Assignment2.FirebaseCredentials)
-	app, err := firebase.NewApp(ctx, nil, opt)
+	//
+	opt := option.WithCredentialsJSON(Assignment2.FirebaseCredentials) // Use the Firebase credentials file
+	app, err := firebase.NewApp(ctx, nil, opt)                         // Initialize the Firebase app
 	if err != nil {
 		log.Fatalf("Failed to create a new Firebase app: %v", err)
 		return err
 	}
 
-	Client, err = app.Firestore(ctx)
+	Client, err = app.Firestore(ctx) // Initialize the Firestore client
 	if err != nil {
 		log.Fatalf("Failed to create a new Firestore client: %v", err)
 		return err
@@ -42,19 +42,19 @@ func InitFirebase() error {
 	return nil
 }
 
+// WebhookCache is a struct that holds a map of webhooks and a timestamp for the last sync.
 type WebhookCache struct {
 	sync.RWMutex
-	cache    map[string]structs.WebhookGet
-	lastSync time.Time
+	cache map[string]structs.WebhookGet
 }
 
 var webhookCache WebhookCache
 
 func InitCache() {
 
+	// Initialize a struct for the cache
 	webhookCache = WebhookCache{
-		cache:    make(map[string]structs.WebhookGet),
-		lastSync: time.Now(),
+		cache: make(map[string]structs.WebhookGet),
 	}
 
 	// Retrieve all documents from Firestore and add them to the cache
@@ -85,16 +85,16 @@ func InitCache() {
 	log.Println("Cache initialized")
 }
 
+// SyncCacheToFirebase syncs the cache to Firebase.
 func SyncCacheToFirebase() {
 	webhookCache.Lock()
 	defer webhookCache.Unlock()
 
-	updatedWebhooksCount := 0
-	log.Println("Starting SyncCacheToFirebase")
+	updatedWebhooksCount := 0 // Counter for amount of updated webhooks
 
-	batch := Client.BulkWriter(ctx) // create a new batch write
+	batch := Client.BulkWriter(ctx) // Create a new BulkWriter
 
-	tmpCache := make(map[string]structs.WebhookGet) // creates a temp cache for webhooks that are modified
+	tmpCache := make(map[string]structs.WebhookGet) // Creates a temp cache for webhooks that are modified
 	for _, webhook := range webhookCache.cache {
 		if !webhook.Modified {
 			continue
@@ -104,7 +104,7 @@ func SyncCacheToFirebase() {
 		docRef := Client.Collection(collection).Doc(webhook.WebhookID)
 		batch.Set(docRef, map[string]interface{}{
 			"Counter": webhook.Counter,
-		}, firestore.MergeAll) // add the update operation to the batch
+		}, firestore.MergeAll) // Add the update operation to the BulkWriter
 
 	}
 	if updatedWebhooksCount > 0 {
@@ -117,12 +117,12 @@ func SyncCacheToFirebase() {
 		updatedHook.Modified = false
 		webhookCache.cache[webhookID] = updatedHook
 	}
-	log.Printf("Finished SyncCacheToFirebase. Updated %d webhooks", updatedWebhooksCount)
 }
 
+// PeriodicSyncCache syncs the cache to Firebase every 5 minutes.
 func PeriodicSyncCache() {
 	// Sync the cache with Firebase periodically
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := time.NewTicker(Assignment2.WEBHOOK_SYNC * time.Minute)
 	for range ticker.C {
 		SyncCacheToFirebase()
 	}
@@ -130,12 +130,12 @@ func PeriodicSyncCache() {
 
 // RemoveExpiredWebhooks removes webhooks that are older than 30 days from Firestore and the in-memory cache
 func RemoveExpiredWebhooks() {
-	ticker := time.NewTicker(24 * time.Hour) // Check for expired webhooks every 24 hours
+	ticker := time.NewTicker(Assignment2.WEBHOOK_AGE_CHECK * time.Hour) // Check for expired webhooks every 24 hours
 	for range ticker.C {
 		now := time.Now()   // Get current time
 		webhookCache.Lock() // Lock the cache
 		for webhookID, webhook := range webhookCache.cache {
-			if now.Sub(webhook.Created) >= 30*24*time.Hour { // Webhook is older than 30 days, delete it from Firestore
+			if now.Sub(webhook.Created) >= Assignment2.WEBHOOK_EXPIRATION*time.Hour { // Webhook is older than 30 days, delete it from Firestore
 				docRef := Client.Collection(collection).Doc(webhookID) // Get the document reference
 				_, err := docRef.Delete(ctx)                           // Delete the document from Firestore
 				if err != nil {
@@ -306,24 +306,19 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	// Set the content type to JSON
 	w.Header().Set("Content-Type", "application/json")
-	// Set the status code to 200 (OK)
-	w.WriteHeader(http.StatusOK)
-	// Write the response body
-	w.Write(jsonData)
+	w.WriteHeader(http.StatusOK) // Set the status code to 200 (OK)
+	w.Write(jsonData)            // Write the response body
 }
 
 func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 	// Remove the trailing slash and split the URL into parts
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
 
-	// Retrieve individual webhook if id is provided
-	if len(parts) > 4 {
+	if len(parts) > 4 { // Retrieve individual webhook if id is provided
 		id := parts[4]
 
 		// Retrieve webhook from the in-memory cache
-		webhookCache.RLock()
 		webhook, exists := webhookCache.cache[id]
-		webhookCache.RUnlock()
 
 		if !exists {
 			http.Error(w, "Webhook not found", http.StatusNotFound)
@@ -331,23 +326,43 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(webhook)
-	} else {
-		// Retrieve all webhooks if no id is provided
-		webhookCache.RLock()
-		defer webhookCache.RUnlock()
+		// Marshal the data and write it to the response
+		jsonData, err := json.Marshal(webhook)
+		if err != nil {
+			log.Println("Error marshaling document data: ", err.Error())
+			http.Error(w, "Error marshaling document data", http.StatusInternalServerError)
+			return
+		}
+		// Set the status code to 200 (OK)
+		w.WriteHeader(http.StatusOK)
+		// Write the response body
+		_, err = w.Write(jsonData)
+		if err != nil {
+			return
+		}
+	} else { // Retrieve all webhooks from cache if no id is provided
 
-		hooks := make([]structs.WebhookGet, 0, len(webhookCache.cache))
+		webhooks := make([]structs.WebhookGet, 0, len(webhookCache.cache))
 		for _, hook := range webhookCache.cache {
-			hooks = append(hooks, hook)
+			webhooks = append(webhooks, hook)
 		}
 
 		// Set the content type to JSON
 		w.Header().Set("Content-Type", "application/json")
+		// Marshal the data and write it to the response
+		jsonData, err := json.Marshal(webhooks)
+		if err != nil {
+			log.Println("Error marshaling document data: ", err.Error())
+			http.Error(w, "Error marshaling document data", http.StatusInternalServerError)
+			return
+		}
 		// Set the status code to 200 (OK)
 		w.WriteHeader(http.StatusOK)
 		// Write the response body
-		json.NewEncoder(w).Encode(hooks)
+		_, err = w.Write(jsonData)
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -378,7 +393,7 @@ func invokeWebhook(invoke structs.WebhookGet) {
 	}
 	// Creates a payload with the data that will be sent to the webhook
 	payload, _ := json.Marshal(data)
-	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
+	// Sends a POST request to the webhook URL with the payload
 	_, err := http.Post(invoke.Url, "application/json", bytes.NewReader(payload))
 	if err != nil {
 		log.Println("Error during request creation. Error:", err)
