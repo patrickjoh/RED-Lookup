@@ -14,6 +14,8 @@ RUN go build -v -o main ./cmd/main.go
 FROM alpine:latest
 RUN apk add --no-cache ca-certificates
 WORKDIR /usr/src/app
+COPY --from=builder /usr/src/app/handler/data/renewable-share-energy.csv ./handler/data/renewable-share-energy.csv
+COPY --from=builder /usr/src/app/firebase.json ./firebase.json
 COPY --from=builder /usr/src/app/main .
 # Expose port 8080 for the application
 EXPOSE 8080

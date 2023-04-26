@@ -1,5 +1,7 @@
 # Default ignored files
 /stub
+/cmd/RESTstub
 /.idea
 /.git
 /README.md
+/handler/*_test.go
