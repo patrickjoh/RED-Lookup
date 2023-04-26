@@ -25,6 +25,7 @@ func main() {
 
 	handler.InitCache()                 // Initialize the cache
 	go handler.PeriodicSyncCache()      // Start a goroutine to periodically sync the cache to Firebase
+	go handler.RemoveExpiredWebhooks()  // Start a goroutine to remove expired webhooks
 	defer handler.SyncCacheToFirebase() // Sync the cache to Firebase before closing the application
 
 	mux := http.NewServeMux() // Create a new ServeMux for the main application
