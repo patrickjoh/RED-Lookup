@@ -1,14 +1,12 @@
 package handler
 
 import (
-	"Assignment2"
 	"Assignment2/structs"
 	"encoding/json"
 	"fmt"
 	"google.golang.org/api/iterator"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -33,7 +31,7 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// handleStatus: shows availability for all third party services
+// handleStatus shows availability for all third party services
 func handleStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Remove the trailing slash and split the URL into parts
@@ -48,20 +46,6 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Define the URL
 	restURL := "http://129.241.150.113:8080/"
-
-	// Open CSV file
-	fd, err := os.Open(Assignment2.CSV_PATH)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error opening CSV file: %s", err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	defer func(fd *os.File) {
-		err := fd.Close()
-		if err != nil {
-			fmt.Println("Error closing file: ", err)
-		}
-	}(fd)
 
 	restResp, err := http.Get(restURL)
 	if err != nil {
@@ -102,7 +86,12 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 	// Set content type
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	_, err = w.Write(data)
+	if err != nil {
+		log.Println("Error sending response")
+		http.Error(w, "Error sending response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // FirestoreStatus checks availability of Firestore db and returns a status code
@@ -120,7 +109,6 @@ func FirestoreStatus() string {
 
 	// Return error if collection cannot be found
 	if err != nil || collections == nil || len(collections) < 1 {
-
 		status := strconv.Itoa(http.StatusServiceUnavailable) + " " + http.StatusText(http.StatusServiceUnavailable)
 		return status
 	}
