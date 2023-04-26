@@ -41,6 +41,7 @@ using Firebase.
 * Copy the JSON file to the root directory of the project and rename it to `firebase.json`.
 
 Change the following constants in 'constants.go' to match your preferences:
+
 - `PORT` - The port the service will run on.
 - `COUNTRYAPI_CODES` - The URL to the country API.
 - `WEBHOOK_EXPIRATION` - The number of hours a webhook will be valid for.
@@ -108,6 +109,7 @@ Pre-requisites:
 *Build the project:*
 
 ```go
+go mod download && go mod verify
 go build -o./app./cmd/main.go
 ```
 
@@ -532,9 +534,19 @@ Path: /energy/v1/status
 {
   "countries_api": "<http status code for *REST Countries API*>",
   "notification_db": "<http status code for *Notification DB* in Firebase>",
-  "webhooks": <number of registered webhooks>,
+  "webhooks": <number
+  of
+  registered
+  webhooks>,
   "version": "v1",
-  "uptime": <time in seconds from the last service restart>
+  "uptime": <time
+  in
+  seconds
+  from
+  the
+  last
+  service
+  restart>
 }
 ```
 
@@ -587,6 +599,7 @@ go tool cover -html=coverage.out
 ## Test Coverage
 
 **- Total coverage: 72,6%**
+
 ```http
 handler/currentRenew.go: 80.2%
 
@@ -598,9 +611,6 @@ handler/renewHistory.go: 70,8%
 
 handler/status.go.go: 69,6%
 ```
-
-
-
 
 # Contributors
 
