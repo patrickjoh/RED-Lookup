@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// Define a struct that represents the structure of your JSON data
+// Country Define a struct that represents the structure of your JSON data
 type Country struct {
 	Name string `json:"name"`
 	Code string `json:"code"`
