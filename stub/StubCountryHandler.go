@@ -13,6 +13,7 @@ type Country struct {
 	Code string `json:"code"`
 }
 
+// CountryHandler is a function that handles the /country stub endpoint
 func CountryHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// If the request is a GET, then call the stubHandler
@@ -27,6 +28,7 @@ func CountryHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// handlerCountry Handles json input and returns it
 func handlerCountry(w http.ResponseWriter) {
 	// Set the content type to JSON
 	w.Header().Set("Content-Type", "application/json")
@@ -43,6 +45,7 @@ func handlerCountry(w http.ResponseWriter) {
 	}
 }
 
+// parseFile is a function that parses a file and returns the bytes
 func parseFile(filename string) []byte {
 	// Open and
 	file, e := os.ReadFile(filename)
