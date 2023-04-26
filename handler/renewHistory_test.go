@@ -3,7 +3,6 @@ package handler
 import (
 	"Assignment2"
 	"github.com/stretchr/testify/assert"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -127,7 +126,6 @@ func TestMalformedURL(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(handleHistoryGet))
 	defer server.Close()
-	log.Println("UWU 1:", server.URL)
 
 	url := server.URL + Assignment2.HISTORY_PATH + "NORE"
 	response, err := http.Get(url)
@@ -137,14 +135,51 @@ func TestMalformedURL(t *testing.T) {
 
 }
 
-/*
+func TestBeginEnd(t *testing.T) {
+	// Change current working directory to the directory where the test file is located
+	err := os.Chdir("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		// Reset the current working directory after the test has completed
+		err := os.Chdir("./handler")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	server := httptest.NewServer(http.HandlerFunc(handleHistoryGet))
+	defer server.Close()
 
-func TestParams(t *testing.T) {
+	url := server.URL + Assignment2.HISTORY_PATH + "NOR" + "?begin=1992&end=1990"
+	response, err := http.Get(url)
 
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 }
 
+/*
 func TestNoCountryFound(t *testing.T) {
+	// Change current working directory to the directory where the test file is located
+	err := os.Chdir("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		// Reset the current working directory after the test has completed
+		err := os.Chdir("./handler")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	server := httptest.NewServer(http.HandlerFunc(handleHistoryGet))
+	defer server.Close()
 
+	url := server.URL + Assignment2.HISTORY_PATH + "HIJ"
+	response, err := http.Get(url)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusNotFound, response.StatusCode)
 }
 
 */
