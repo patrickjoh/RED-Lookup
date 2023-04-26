@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-// Define a struct that represents the structure of your JSON data
+// Neighbour Define a struct that represents the structure of your JSON data
 type Neighbour struct {
 	Name string `json:"name"`
 	Code string `json:"code"`
