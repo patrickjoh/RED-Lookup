@@ -37,7 +37,7 @@ func TestInitCache(t *testing.T) {
 	//initialize cache values
 	InitCache()
 
-	// retrieve all data from Firestore and convert it all to structs.WebhookGet format
+	// retrieve all data from Firebase and convert it all to structs.WebhookGet format
 	docRef, err := Client.Collection(collection).Documents(ctx).GetAll()
 	require.NoError(t, err)
 	registeredWebhook := make(map[string]structs.WebhookGet)
@@ -58,10 +58,6 @@ func TestInitCache(t *testing.T) {
 
 	//check if one of the value in the webhook is registered in the cache
 	assert.Equal(t, registeredWebhook, webhookCache.cache)
-}
-
-func TestUpdateCache(t *testing.T) {
-
 }
 
 // TestRegisterWebhook test successful registerWebhook add to firebase successfully
@@ -105,7 +101,7 @@ func TestRegisterWebhook(t *testing.T) {
 	WebHookID = webhookID
 	sampleBody["webhook_id"] = webhookID
 
-	// Use the webhook ID to retrieve the webhook from Firestore
+	// Use the webhook ID to retrieve the webhook from Firebase
 	docRef := Client.Collection(collection).Doc(webhookID)
 	docSnapshot, err := docRef.Get(ctx)
 	require.NoError(t, err)
@@ -119,6 +115,67 @@ func TestRegisterWebhook(t *testing.T) {
 	assert.Equal(t, int64(69), registeredWebhook.Calls)
 	assert.Equal(t, int64(0), registeredWebhook.Counter)
 	assert.Equal(t, webhookID, registeredWebhook.WebhookID)
+}
+
+// TestSyncCacheToFirebase test if firebase is updated
+func TestSyncCacheToFirebase(t *testing.T) {
+	// start retrieval of all data from Firebase and convert it all to structs.WebhookGet format
+	docRef, err := Client.Collection(collection).Documents(ctx).GetAll()
+	require.NoError(t, err)
+	startWebhook := make(map[string]structs.WebhookGet)
+	for _, doc := range docRef {
+		data := doc.Data()
+		webhookID := doc.Ref.ID
+		if calls, ok := data["Calls"].(int64); ok {
+			newHook := structs.WebhookGet{
+				WebhookID: webhookID,
+				Url:       data["Url"].(string),
+				Country:   data["Country"].(string),
+				Calls:     calls,
+				Counter:   data["Counter"].(int64),
+			}
+			startWebhook[webhookID] = newHook
+		}
+	}
+
+	// create new data for the SyncCacheToFirebase to be updated
+	//covert sampleData to []bytes
+	data, err := json.MarshalIndent(sampleBody, "", " ")
+	assert.Nil(t, err)
+	//create request
+	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(data))
+	assert.Nil(t, err)
+	resp := httptest.NewRecorder()
+	handler := http.HandlerFunc(NotificationsHandler)
+	handler.ServeHTTP(resp, request)
+
+	// sync with SyncCacheToFirebase
+	SyncCacheToFirebase()
+
+	// updated retrieve of all data from Firebase and convert it all to structs.WebhookGet format
+	docRef2, err := Client.Collection(collection).Documents(ctx).GetAll()
+	require.NoError(t, err)
+	endWebhook := make(map[string]structs.WebhookGet)
+	for _, doc := range docRef2 {
+		data := doc.Data()
+		webhookID := doc.Ref.ID
+		if calls, ok := data["Calls"].(int64); ok {
+			newHook := structs.WebhookGet{
+				WebhookID: webhookID,
+				Url:       data["Url"].(string),
+				Country:   data["Country"].(string),
+				Calls:     calls,
+				Counter:   data["Counter"].(int64),
+			}
+			endWebhook[webhookID] = newHook
+		}
+	}
+
+	//check if the firebase is updated correctly
+	require.NotEqual(t, startWebhook, endWebhook)
+
+	//check if cache is successfully synced in the firebase
+	assert.Equal(t, endWebhook, webhookCache.cache)
 }
 
 // TestRegisterWebhookNoValue test unsuccessful testRegisterWebhook add fail
@@ -318,7 +375,6 @@ func TestDeleteWebhookNonExistingID(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
 
-/*
 // TestUpdateAndInvoke tests the counter mechanism in UpdateAndInvoke
 func TestUpdateAndInvoke(t *testing.T) {
 	webhookCache.cache = make(map[string]structs.WebhookGet)
@@ -335,7 +391,6 @@ func TestUpdateAndInvoke(t *testing.T) {
 		t.Error("Counter incremented incorrectly")
 	}
 }
-*/
 
 // TestInvokeWebhook test if Invoked
 func TestInvokeWebhook(t *testing.T) {

@@ -51,7 +51,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 	sortByValue := params.Get("sortByValue")
-
 	if begin > end && end != "" {
 		log.Printf("begining year (%s) > ending year(%s)", begin, end)
 		http.Error(w, "Incorrect use of year. Try history/{country?}{?begin=year&end=year?}", http.StatusBadRequest)

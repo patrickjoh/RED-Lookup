@@ -1,5 +1,7 @@
 package structs
 
+import "time"
+
 type StatusData struct {
 	CountriesAPI   string `json:"countries_api"`
 	NotificationSB string `json:"notifications_db"`
@@ -21,20 +23,22 @@ type CountryMean struct {
 }
 
 type WebhookGet struct {
-	WebhookID string `json:"webhook_id" omitempty:"true"`
-	Url       string `json:"url"`
-	Country   string `json:"country"`
-	Calls     int64  `json:"calls"`
-	Counter   int64  `json:"counter" omitempty:"true"`
-	Modified  bool   `json:"modified" omitempty:"true"`
+	WebhookID string    `json:"webhook_id" omitempty:"true"`
+	Url       string    `json:"url"`
+	Country   string    `json:"country"`
+	Calls     int64     `json:"calls"`
+	Counter   int64     `json:"counter" omitempty:"true"`
+	Modified  bool      `json:"modified" omitempty:"true"`
+	Created   time.Time `json:"created"`
 }
 
 type WebhookFirebase struct {
-	WebhookID string `json:"webhook_id"`
-	Url       string `json:"url"`
-	Country   string `json:"country"`
-	Calls     int64  `json:"calls"`
-	Counter   int64  `json:"counter"`
+	WebhookID string    `json:"webhook_id"`
+	Url       string    `json:"url"`
+	Country   string    `json:"country"`
+	Calls     int64     `json:"calls"`
+	Counter   int64     `json:"counter"`
+	Created   time.Time `json:"created"`
 }
 
 type WebhookInvoke struct {
