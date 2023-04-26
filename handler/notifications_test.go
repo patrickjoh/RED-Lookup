@@ -138,6 +138,44 @@ func TestRegisterWebhookNoValue(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, resp.Code)
 }
 
+// TestRegisterWebhookNoUrl test when no URL is given
+func TestRegisterWebhookNoUrl(t *testing.T) {
+	//create request
+	sample := []byte(`{"url":"",
+	"country": "COL",
+	"calls":   69}`)
+	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(sample))
+	assert.Nil(t, err)
+
+	resp := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(NotificationsHandler)
+
+	handler.ServeHTTP(resp, request)
+
+	// Check that the webhook was created successfully and get its ID
+	require.Equal(t, http.StatusBadRequest, resp.Code)
+}
+
+// TestRegisterWebhookInvalidCountry test registration of a invalid country
+func TestRegisterWebhookInvalidCountry(t *testing.T) {
+	//create request
+	sample := []byte(`{"url":"https://webhook.site/63e2fb75-0742-44c1-9f14-fdd327649704",
+	"country": "GGG",
+	"calls":   69}`)
+	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(sample))
+	assert.Nil(t, err)
+
+	resp := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(NotificationsHandler)
+
+	handler.ServeHTTP(resp, request)
+
+	// Check that the webhook was created successfully and get its ID
+	require.Equal(t, http.StatusBadRequest, resp.Code)
+}
+
 // TestRegisterWebhookNoValue test invalid number of calls
 func TestRegisterWebhookInvalidCalls(t *testing.T) {
 	//create request
