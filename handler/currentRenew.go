@@ -82,7 +82,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 			// No country found with matching data
 			if len(countryData) < 2 && countryData[0].Name == "" {
 				log.Println("No country found")
-				http.Error(w, "MNo country found", http.StatusBadRequest)
+				http.Error(w, "No country found", http.StatusBadRequest)
 				return
 			}
 		}
@@ -102,7 +102,12 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
+	_, err = w.Write(jsonResponse)
+	if err != nil {
+		log.Println("Error sending response")
+		http.Error(w, "Error sending response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // getAllCountries retrieves the most recent entries for all countries.
@@ -171,13 +176,20 @@ func getNeighborCountry(w http.ResponseWriter, IsoCode string) ([]string, error)
 	// Get bordering countries data from "REST_Countries" API
 	specCountryURL := Assignment2.COUNTRYAPI_CODES + IsoCode
 	countryResponse, err := http.Get(specCountryURL)
+
 	if err != nil {
 		http.Error(w, "Error during request to CountryAPI", http.StatusInternalServerError)
-		log.Println("Failed to get bordering country data from CountryAPI")
+		log.Println("Failed to get bordering country data from CountryAPI: ")
 		return nil, err
 	}
 	// Close the response body when the function returns
-	defer countryResponse.Body.Close()
+	defer func() {
+		if countryResponse != nil {
+			if err := countryResponse.Body.Close(); err != nil {
+				log.Println("Error closing response body:", err)
+			}
+		}
+	}()
 
 	// Struct to hold the response for the specified country
 	var specCountryData []structs.Country
