@@ -135,6 +135,7 @@ func getFromBeginToEnd(begin int, end int, countryIterators []structs.CountryDat
 	var returnData []structs.CountryData
 	// Find country's history from year(begin to end)
 	for _, col := range countryIterators {
+		// If year is within range
 		if col.Year <= end && col.Year >= begin {
 			newHisData := structs.CountryData{
 				Name:       col.Name,
@@ -151,7 +152,7 @@ func getFromBeginToEnd(begin int, end int, countryIterators []structs.CountryDat
 // getAllCountriesMean gets all countries, checks for redundancy and returns a struct of
 // all countries with mean percentage of their renewable energy
 func getAllCountriesMean(countries []structs.CountryData) []structs.CountryMean {
-
+	// Variable that stores all countries with mean percentage
 	var retData []structs.CountryMean
 	lastCountry := ""
 	// going through all countries
