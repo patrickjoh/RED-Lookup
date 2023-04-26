@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"Assignment2"
 	"Assignment2/structs"
 	"encoding/json"
 	"fmt"
@@ -45,13 +46,17 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Define the URL
-	restURL := "http://129.241.150.113:8080/"
+	restURL := Assignment2.COUNTRYAPI_CODES + "nor," + "swe," + "fin"
 
+	var restStatus string
+	// Send request to RESTCountries
 	restResp, err := http.Get(restURL)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error in response: %s", err.Error()), http.StatusInternalServerError)
-		return
+		restStatus = http.StatusText(http.StatusServiceUnavailable)
+	} else {
+		restStatus = restResp.Status
 	}
+
 	defer restResp.Body.Close()
 
 	// Attempt to find a collection
@@ -69,7 +74,7 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Get status codes from response structs
 	stData := structs.StatusData{
-		CountriesAPI:   restResp.Status,
+		CountriesAPI:   restStatus,
 		NotificationSB: fireStoreAvail,
 		Webhooks:       numOfHooks,
 		Version:        "v1",
