@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	firebase "firebase.google.com/go"
-	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"log"
 	"net/http"
@@ -69,13 +68,14 @@ func InitCache() {
 		m := doc.Data()
 		m["WebhookID"] = doc.Ref.ID
 
-		if m["Calls"] != nil {
+		if m["WebhookID"] != nil {
 			newHook := structs.WebhookGet{
 				WebhookID: m["WebhookID"].(string),
 				Url:       m["Url"].(string),
 				Country:   m["Country"].(string),
 				Calls:     m["Calls"].(int64),
 				Counter:   m["Counter"].(int64),
+				Modified:  false,
 			}
 
 			webhookCache.cache[newHook.WebhookID] = newHook
@@ -85,68 +85,46 @@ func InitCache() {
 	log.Println("Cache initialized")
 }
 
-func UpdateCache() {
-	// Get the last sync time and whether it's the first sync
-	webhookCache.RLock()
-	lastSync := webhookCache.lastSync
-	firstSync := false
-	if lastSync.IsZero() {
-		firstSync = true
-	}
-	webhookCache.RUnlock()
-
-	// Create the query based on whether it's the first sync or not
-	var query *firestore.DocumentIterator
-	if firstSync {
-		query = Client.Collection(collection).Documents(ctx)
-	} else {
-		query = Client.Collection(collection).Where("lastModified", ">", lastSync).Documents(ctx)
-	}
-
+func SyncCacheToFirebase() {
 	webhookCache.Lock()
 	defer webhookCache.Unlock()
 
-	newLastSync := webhookCache.lastSync
+	updatedWebhooksCount := 0
+	log.Println("Starting SyncCacheToFirebase")
 
-	for {
-		doc, err := query.Next()
-		if err == iterator.Done {
-			break
+	batch := Client.BulkWriter(ctx) // create a new batch write
+
+	tmpCache := make(map[string]structs.WebhookGet) // creates a temp cache for webhooks that are modified
+	for _, webhook := range webhookCache.cache {
+		if !webhook.Modified {
+			continue
 		}
-		if err != nil {
-			log.Printf("Failed to iterate: %v", err)
-		}
+		tmpCache[webhook.WebhookID] = webhook
+		updatedWebhooksCount++
+		docRef := Client.Collection(collection).Doc(webhook.WebhookID)
+		batch.Set(docRef, map[string]interface{}{
+			"Counter": webhook.Counter,
+		}, firestore.MergeAll) // add the update operation to the batch
 
-		// A message map with string keys. Each key is one field, like "text" or "timestamp"
-		m := doc.Data()
-		m["WebhookID"] = doc.Ref.ID
-
-		if m["Calls"] != nil {
-			newHook := structs.WebhookGet{
-				WebhookID: m["WebhookID"].(string),
-				Url:       m["Url"].(string),
-				Country:   m["Country"].(string),
-				Calls:     m["Calls"].(int64),
-				Counter:   m["Counter"].(int64),
-			}
-			webhookCache.cache[newHook.WebhookID] = newHook
-
-			// Update the newLastSync variable if the document's lastModified is more recent
-			lastModified := m["lastModified"].(time.Time)
-			if lastModified.After(newLastSync) {
-				newLastSync = lastModified
-			}
-		}
+	}
+	if updatedWebhooksCount > 0 {
+		// Sends the batch request to firestore
+		batch.Flush()
 	}
 
-	webhookCache.lastSync = newLastSync
+	// Update webhook cache
+	for webhookID, updatedHook := range tmpCache {
+		updatedHook.Modified = false
+		webhookCache.cache[webhookID] = updatedHook
+	}
+	log.Printf("Finished SyncCacheToFirebase. Updated %d webhooks", updatedWebhooksCount)
 }
 
 func PeriodicSyncCache() {
 	// Sync the cache with Firebase periodically
 	ticker := time.NewTicker(5 * time.Minute)
 	for range ticker.C {
-		UpdateCache()
+		SyncCacheToFirebase()
 	}
 }
 
@@ -204,17 +182,23 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Initialize counter for invocation
-	newWebhook.Counter = 0
+	newWebhook.Counter = 0                           // Initialize counter for invocation
+	docRef := Client.Collection(collection).NewDoc() // Generate a new document reference
 
-	// Generate a new document reference
-	docRef := Client.Collection(collection).NewDoc()
+	newWebhook.WebhookID = docRef.ID // Set the generated ID in the webhook data struct
+	newWebhook.Modified = false      // Initialize modified flag
 
-	// Set the generated ID in the webhook data struct
-	newWebhook.WebhookID = docRef.ID
+	var firebaseWebhook structs.WebhookFirebase // Create a new webhook struct to store the data from the database
+
+	// Set the data from the request body to the new webhook struct
+	firebaseWebhook.WebhookID = newWebhook.WebhookID
+	firebaseWebhook.Url = newWebhook.Url
+	firebaseWebhook.Country = newWebhook.Country
+	firebaseWebhook.Calls = newWebhook.Calls
+	firebaseWebhook.Counter = newWebhook.Counter
 
 	// Add the webhook to the database with the generated ID
-	_, err = docRef.Set(ctx, newWebhook)
+	_, err = docRef.Set(ctx, firebaseWebhook)
 	if err != nil {
 		// Error handling
 		log.Println("Error when adding Webhook to database: ", err.Error())
@@ -269,7 +253,6 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	webhookCache.RLock()
 	data, ok := webhookCache.cache[id]
 	webhookCache.RUnlock()
-
 	if !ok {
 		log.Println("Webhook not found with ID: " + id)
 		http.Error(w, "Webhook not found with ID: "+id, http.StatusNotFound)
@@ -345,19 +328,18 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateAndInvoke(isoCode string) {
-	webhookCache.RLock()
-	defer webhookCache.RUnlock()
+	webhookCache.Lock()         // Change RLock to Lock
+	defer webhookCache.Unlock() // Add defer to release lock after the function returns
 
 	for webhookID, currentHook := range webhookCache.cache {
 		if currentHook.Country == strings.ToUpper(isoCode) {
-			currentHook.Counter++
+			currentHook.Counter++       // Increment counter
+			currentHook.Modified = true // Reset modified flag
 			// Checks if the counter is a multiple of amount of calls in the webhook
 			if currentHook.Counter%currentHook.Calls == 0 {
-				go invokeWebhook(currentHook)
+				go invokeWebhook(currentHook) // Invoke webhook that matches the country
 			}
-
-			// Update webhook in cache
-			webhookCache.cache[webhookID] = currentHook
+			webhookCache.cache[webhookID] = currentHook // Update webhook cache with the updated webhook
 		}
 	}
 }

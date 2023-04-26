@@ -26,6 +26,15 @@ type WebhookGet struct {
 	Country   string `json:"country"`
 	Calls     int64  `json:"calls"`
 	Counter   int64  `json:"counter" omitempty:"true"`
+	Modified  bool   `json:"modified" omitempty:"true"`
+}
+
+type WebhookFirebase struct {
+	WebhookID string `json:"webhook_id"`
+	Url       string `json:"url"`
+	Country   string `json:"country"`
+	Calls     int64  `json:"calls"`
+	Counter   int64  `json:"counter"`
 }
 
 type WebhookInvoke struct {
