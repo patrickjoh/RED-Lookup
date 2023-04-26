@@ -51,7 +51,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 	sortByValue := params.Get("sortByValue")
-
 	if begin > end && end != "" {
 		log.Printf("begining year (%s) > ending year(%s)", begin, end)
 		http.Error(w, "Incorrect use of year. Try history/{country?}{?begin=year&end=year?}", http.StatusBadRequest)
@@ -66,7 +65,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	if iso == "" {
 		rangedCountries = Assignment2.ConvertCsvData()
 		if begin != "" && end == "" {
-			startYear, _ = strconv.Atoi(end)
+			startYear, _ = strconv.Atoi(begin)
 			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.ConvertCsvData())
 		} else if end != "" && begin == "" {
 			endYear, _ = strconv.Atoi(end)
