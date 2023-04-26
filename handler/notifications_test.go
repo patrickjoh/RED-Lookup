@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
@@ -18,20 +19,70 @@ var WebHookID string
 
 // test post value
 var sampleBody = map[string]interface{}{
-	"url":     "https://webhook.site/63e2fb75-0742-44c1-9f14-fdd327649704",
-	"country": "col",
-	"calls":   69,
+	"webhook_id": "",
+	"url":        "https://webhook.site/63e2fb75-0742-44c1-9f14-fdd327649704",
+	"country":    "col",
+	"calls":      69,
 }
 
-// Testing the initialization of firebase
+// TestInitFirebase Testing the initialization of firebase
 func TestInitFirebase(t *testing.T) {
 	//initialize firebase values
 	err := InitFirebase()
 	assert.Nil(t, err, "expected no error, error: %v", err)
 }
 
-// test successful registerWebhook add to firebase successfully
+// TestInitCache Testing the initialization of cache
+func TestInitCache(t *testing.T) {
+	//initialize cache values
+	InitCache()
+
+	// retrieve all data from Firestore and convert it all to structs.WebhookGet format
+	docRef, err := Client.Collection(collection).Documents(ctx).GetAll()
+	require.NoError(t, err)
+	registeredWebhook := make(map[string]structs.WebhookGet)
+	for _, doc := range docRef {
+		data := doc.Data()
+		webhookID := doc.Ref.ID
+		if calls, ok := data["Calls"].(int64); ok {
+			newHook := structs.WebhookGet{
+				WebhookID: webhookID,
+				Url:       data["Url"].(string),
+				Country:   data["Country"].(string),
+				Calls:     calls,
+				Counter:   data["Counter"].(int64),
+			}
+			registeredWebhook[webhookID] = newHook
+		}
+	}
+
+	//check if one of the value in the webhook is registered in the cache
+	assert.Equal(t, registeredWebhook, webhookCache.cache)
+}
+
+func TestUpdateCache(t *testing.T) {
+
+}
+
+// TestRegisterWebhook test successful registerWebhook add to firebase successfully
 func TestRegisterWebhook(t *testing.T) {
+
+	// Change current working directory to the directory where the test file is located
+	err := os.Chdir("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		// Reset the current working directory after the test has completed
+		err := os.Chdir("./handler")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	// get all the csv-data
+	Assignment2.CSVData = Assignment2.ConvertCsvData()
+
 	//covert sampleData to []bytes
 	data, err := json.MarshalIndent(sampleBody, "", " ")
 	assert.Nil(t, err)
@@ -52,6 +103,7 @@ func TestRegisterWebhook(t *testing.T) {
 	_ = json.NewDecoder(resp.Body).Decode(&responseBody)
 	webhookID := responseBody["webhookId"]
 	WebHookID = webhookID
+	sampleBody["webhook_id"] = webhookID
 
 	// Use the webhook ID to retrieve the webhook from Firestore
 	docRef := Client.Collection(collection).Doc(webhookID)
@@ -66,7 +118,7 @@ func TestRegisterWebhook(t *testing.T) {
 	assert.Equal(t, "col", registeredWebhook.Country)
 	assert.Equal(t, int64(69), registeredWebhook.Calls)
 	assert.Equal(t, int64(0), registeredWebhook.Counter)
-	assert.Equal(t, "", registeredWebhook.WebhookID)
+	assert.Equal(t, webhookID, registeredWebhook.WebhookID)
 }
 
 // TestRegisterWebhookNoValue test unsuccessful testRegisterWebhook add fail
@@ -90,8 +142,8 @@ func TestRegisterWebhookNoValue(t *testing.T) {
 func TestRegisterWebhookInvalidCalls(t *testing.T) {
 	//create request
 	sample := []byte(`{"url":"https://webhook.site/63e2fb75-0742-44c1-9f14-fdd327649704",
-	"country": "col",
-	"calls":   -1}`)
+	"country": "COL",
+	"calls":   0}`)
 	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(sample))
 	assert.Nil(t, err)
 
@@ -167,11 +219,7 @@ func TestRetrieveWebhookNonExisting(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.Nil(t, err)
 
-	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-}
-
-// TestUpdateAndInvokeOK test if it works
-func TestUpdateAndInvokeOK(t *testing.T) {
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
 
 // TestDeleteWebhookWithID test when an existing id is given
@@ -235,3 +283,22 @@ func TestDeleteWebhookNonExistingID(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
+
+/*
+// TestUpdateAndInvoke tests the counter mechanism in UpdateAndInvoke
+func TestUpdateAndInvoke(t *testing.T) {
+	webhookCache.cache = make(map[string]structs.WebhookGet)
+
+	testHook := structs.WebhookGet{Country: "TCD", Counter: 0, Calls: 2}
+	webhookCache.cache["TCD"] = testHook
+	UpdateAndInvoke("TCD")
+	UpdateAndInvoke("TCD")
+	if webhookCache.cache["TCD"].Counter != 1 {
+		t.Error("Counter incremented incorrectly")
+	}
+
+	if webhookCache.cache["TCD"].Counter != webhookCache.cache["TCD"].Counter {
+		t.Error("Counter incremented incorrectly")
+	}
+}
+*/
