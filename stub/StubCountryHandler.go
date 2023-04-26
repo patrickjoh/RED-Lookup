@@ -2,11 +2,12 @@ package stub
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 )
 
-// Country Define a struct that represents the structure of your JSON data
+// Country is a struct that represents the structure of your JSON data
 type Country struct {
 	Name string `json:"name"`
 	Code string `json:"code"`
@@ -34,7 +35,12 @@ func handlerCountry(w http.ResponseWriter) {
 	output := parseFile("stub/res/NOR_Country.json")
 
 	// Finally, let's write the JSON to the response
-	w.Write(output)
+	_, err := w.Write(output)
+	if err != nil {
+		log.Println("Error sending response: ", err)
+		http.Error(w, "Error sending response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func parseFile(filename string) []byte {
