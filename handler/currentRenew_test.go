@@ -38,7 +38,7 @@ func TestGetAllCountries(t *testing.T) {
 // TestGetAllCountries tests the getAllCountries function
 func TestGetAllCountriesNoData(t *testing.T) {
 	// Expected output
-	data := []structs.CountryData{}
+	var data []structs.CountryData
 
 	result := getAllCountries(data)
 

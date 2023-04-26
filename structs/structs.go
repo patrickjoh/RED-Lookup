@@ -22,6 +22,15 @@ type CountryMean struct {
 	Percentage float64 `json:"percentage"`
 }
 
+type WebhookFirebase struct {
+	WebhookID string    `json:"webhook_id"`
+	Url       string    `json:"url"`
+	Country   string    `json:"country"`
+	Calls     int64     `json:"calls"`
+	Counter   int64     `json:"counter"`
+	Created   time.Time `json:"created"`
+}
+
 type WebhookGet struct {
 	WebhookID string    `json:"webhook_id" omitempty:"true"`
 	Url       string    `json:"url"`
@@ -29,15 +38,6 @@ type WebhookGet struct {
 	Calls     int64     `json:"calls"`
 	Counter   int64     `json:"counter" omitempty:"true"`
 	Modified  bool      `json:"modified" omitempty:"true"`
-	Created   time.Time `json:"created"`
-}
-
-type WebhookFirebase struct {
-	WebhookID string    `json:"webhook_id"`
-	Url       string    `json:"url"`
-	Country   string    `json:"country"`
-	Calls     int64     `json:"calls"`
-	Counter   int64     `json:"counter"`
 	Created   time.Time `json:"created"`
 }
 
