@@ -70,7 +70,7 @@ func TestMethodNotImplemented(t *testing.T) {
 	assert.Equal(t, http.StatusNotImplemented, response.StatusCode)
 }
 
-// TestFunctionality tests if the function returns 200 OK with correct url
+// TestFunctionalityStatusOK tests if the function returns 200 OK with correct url
 func TestFunctionalityStatusOK(t *testing.T) {
 	// Change current working directory to the directory where the test file is located
 	err := os.Chdir("..")
@@ -146,7 +146,7 @@ func TestBeginEnd(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 }
 
-// Tests if the function returns 404 not found with invalid request and no countries are found
+// TestNoCountryFound tests if the function returns 404 not found with invalid request and no countries are found
 func TestNoCountryFound(t *testing.T) {
 	// Change current working directory to the directory where the test file is located
 	err := os.Chdir("..")
@@ -170,8 +170,8 @@ func TestNoCountryFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, response.StatusCode)
 }
 
-// Test  if the function returns 200 ok with valid request of no isocodes in the url
-func TestNoIsocode(t *testing.T) {
+// TestNoIsoCode tests if the function returns 200 ok with valid request of no isocodes in the url
+func TestNoIsoCode(t *testing.T) {
 	// Change current working directory to the directory where the test file is located
 	err := os.Chdir("..")
 	if err != nil {
