@@ -109,6 +109,57 @@ func TestHandleHistoryGet(t *testing.T) {
 }
 */
 
+// test for not supported method
+func TestMethodNotImplemented(t *testing.T) {
+	// Change current working directory to the directory where the test file is located
+	err := os.Chdir("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		// Reset the current working directory after the test has completed
+		err := os.Chdir("./handler")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	server := httptest.NewServer(http.HandlerFunc(HistoryHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.HISTORY_PATH + "NOR"
+	response, err := http.Post(url, "", nil)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusNotImplemented, response.StatusCode)
+}
+
+// Test if handler returns 200 ok with valid request
+func TestFunctionalityStatusOK(t *testing.T) {
+	// Change current working directory to the directory where the test file is located
+	err := os.Chdir("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		// Reset the current working directory after the test has completed
+		err := os.Chdir("./handler")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	server := httptest.NewServer(http.HandlerFunc(HistoryHandler))
+	defer server.Close()
+
+	url := server.URL + Assignment2.HISTORY_PATH + "NOR"
+	response, err := http.Get(url)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+
+}
+
 // tester for for errorhandling for om isokode som er skrevet inn enten er 3 eller 0
 func TestMalformedURL(t *testing.T) {
 	// Change current working directory to the directory where the test file is located
