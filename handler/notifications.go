@@ -364,15 +364,14 @@ func UpdateAndInvoke(isoCode string) {
 
 // invokeWebhook invokes a webhook
 func invokeWebhook(invoke structs.WebhookGet) {
-
+	// Creates a new webhook invoke struct
 	data := structs.WebhookInvoke{
 		WebhookID: invoke.WebhookID,
 		Country:   invoke.Country,
-		Calls:     invoke.Calls,
+		Calls:     invoke.Counter,
 	}
-
+	// Creates a payload with the data that will be sent to the webhook
 	payload, _ := json.Marshal(data)
-	log.Println("Attempting invocation of url " + invoke.Url + " with content '" + "payload" + "'.")
 	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
 	_, err := http.Post(invoke.Url, "application/json", bytes.NewReader(payload))
 	if err != nil {
