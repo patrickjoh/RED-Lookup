@@ -10,11 +10,11 @@ import (
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"log"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 )
 
 // Firebase context and client used by Firestore functions throughout the program.
@@ -43,6 +43,113 @@ func InitFirebase() error {
 	return nil
 }
 
+type WebhookCache struct {
+	sync.RWMutex
+	cache    map[string]structs.WebhookGet
+	lastSync time.Time
+}
+
+var webhookCache WebhookCache
+
+func InitCache() {
+
+	webhookCache = WebhookCache{
+		cache:    make(map[string]structs.WebhookGet),
+		lastSync: time.Now(),
+	}
+
+	// Retrieve all documents from Firestore and add them to the cache
+	docs, err := Client.Collection(collection).Documents(ctx).GetAll()
+	if err != nil {
+		log.Fatalf("Failed to get documents from Firestore: %v", err)
+	}
+
+	for _, doc := range docs {
+		// A message map with string keys. Each key is one field, like "text" or "timestamp"
+		m := doc.Data()
+		m["WebhookID"] = doc.Ref.ID
+
+		if m["Calls"] != nil {
+			newHook := structs.WebhookGet{
+				WebhookID: m["WebhookID"].(string),
+				Url:       m["Url"].(string),
+				Country:   m["Country"].(string),
+				Calls:     m["Calls"].(int64),
+				Counter:   m["Counter"].(int64),
+			}
+
+			webhookCache.cache[newHook.WebhookID] = newHook
+		}
+	}
+
+	log.Println("Cache initialized")
+}
+
+func UpdateCache() {
+	// Get the last sync time and whether it's the first sync
+	webhookCache.RLock()
+	lastSync := webhookCache.lastSync
+	firstSync := false
+	if lastSync.IsZero() {
+		firstSync = true
+	}
+	webhookCache.RUnlock()
+
+	// Create the query based on whether it's the first sync or not
+	var query *firestore.DocumentIterator
+	if firstSync {
+		query = Client.Collection(collection).Documents(ctx)
+	} else {
+		query = Client.Collection(collection).Where("lastModified", ">", lastSync).Documents(ctx)
+	}
+
+	webhookCache.Lock()
+	defer webhookCache.Unlock()
+
+	newLastSync := webhookCache.lastSync
+
+	for {
+		doc, err := query.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Printf("Failed to iterate: %v", err)
+		}
+
+		// A message map with string keys. Each key is one field, like "text" or "timestamp"
+		m := doc.Data()
+		m["WebhookID"] = doc.Ref.ID
+
+		if m["Calls"] != nil {
+			newHook := structs.WebhookGet{
+				WebhookID: m["WebhookID"].(string),
+				Url:       m["Url"].(string),
+				Country:   m["Country"].(string),
+				Calls:     m["Calls"].(int64),
+				Counter:   m["Counter"].(int64),
+			}
+			webhookCache.cache[newHook.WebhookID] = newHook
+
+			// Update the newLastSync variable if the document's lastModified is more recent
+			lastModified := m["lastModified"].(time.Time)
+			if lastModified.After(newLastSync) {
+				newLastSync = lastModified
+			}
+		}
+	}
+
+	webhookCache.lastSync = newLastSync
+}
+
+func PeriodicSyncCache() {
+	// Sync the cache with Firebase periodically
+	ticker := time.NewTicker(5 * time.Minute)
+	for range ticker.C {
+		UpdateCache()
+	}
+}
+
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
@@ -59,9 +166,8 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// registerWebhook adds a webhook to Firestore db
+// registerWebhook adds a webhook to Firestore db and in-memory cache
 func registerWebhook(w http.ResponseWriter, r *http.Request) {
-
 	// Decode the request body into a webhook struct
 	var newWebhook structs.WebhookGet
 	err := json.NewDecoder(r.Body).Decode(&newWebhook)
@@ -116,8 +222,12 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Add the webhook to the in-memory cache
+	webhookCache.Lock()
+	webhookCache.cache[newWebhook.WebhookID] = newWebhook
+	webhookCache.Unlock()
+
 	// Create a response body with the newly created webhook ID
-	// Return the newly created webhook ID in the response
 	resp := struct {
 		// WebhookID is the ID of the newly created webhook
 		WebhookID string `json:"webhookId"`
@@ -140,7 +250,7 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResponse)
 }
 
-// deleteDocument deletes a webhook from Firestore db
+// deleteWebhook deletes a webhook from Firestore db and the in-memory cache
 func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	// Remove the trailing slash and split the URL into parts
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
@@ -155,41 +265,30 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	// Extract the id from the URL
 	id := parts[4]
 
-	// Retrieve specific message based on id (Firestore-generated hash)
-	docRef := Client.Collection(collection).Doc(id)
+	// Attempt to retrieve webhook from the in-memory cache
+	webhookCache.RLock()
+	data, ok := webhookCache.cache[id]
+	webhookCache.RUnlock()
 
-	// Attempt to retrieve reference to document
-	doc, err := docRef.Get(ctx)
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			log.Println("Document not found with ID: " + id)
-			http.Error(w, "Document not found with ID: "+id, http.StatusNotFound)
-			return
-		} else {
-			log.Println("Error extracting body of returned document of message " + id)
-			http.Error(w, "Error extracting body of returned document of message "+id, http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// Create a buffer to store the document data
-	var data structs.WebhookGet
-
-	// Get webhook to be deleted
-	err = doc.DataTo(&data)
-	if err != nil {
-		log.Println("Error in decoding request body")
-		http.Error(w, "Error in decoding body.", http.StatusBadRequest)
+	if !ok {
+		log.Println("Webhook not found with ID: " + id)
+		http.Error(w, "Webhook not found with ID: "+id, http.StatusNotFound)
 		return
 	}
 
 	// Attempt to delete webhook from Firestore
-	_, err = docRef.Delete(ctx)
+	docRef := Client.Collection(collection).Doc(id)
+	_, err := docRef.Delete(ctx)
 	if err != nil {
 		log.Println("Error deleting document " + id)
 		http.Error(w, "Error deleting document "+id, http.StatusInternalServerError)
 		return
 	}
+
+	// Remove webhook from the in-memory cache
+	webhookCache.Lock()
+	delete(webhookCache.cache, id)
+	webhookCache.Unlock()
 
 	// Marshal the data and write it to the response
 	jsonData, err := json.Marshal(data)
@@ -206,134 +305,65 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
-// retrieveDocument retrieves a webhook specified by an id, or all webhooks if no id
-// is provided from firestore db
 func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 	// Remove the trailing slash and split the URL into parts
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
 
 	// Retrieve individual webhook if id is provided
 	if len(parts) > 4 {
-
 		id := parts[4]
-		// Retrieve specific webhook based on id (Firestore-generated hash)
-		res := Client.Collection(collection).Doc(id)
 
-		// Retrieve reference to document
-		doc, err := res.Get(ctx)
-		if err != nil {
-			log.Println("Error extracting body of returned document of message " + id)
-			http.Error(w, "Error extracting body of returned document of message "+id, http.StatusInternalServerError)
+		// Retrieve webhook from the in-memory cache
+		webhookCache.RLock()
+		webhook, exists := webhookCache.cache[id]
+		webhookCache.RUnlock()
+
+		if !exists {
+			http.Error(w, "Webhook not found", http.StatusNotFound)
 			return
 		}
 
-		// A message map with string keys. Each key is one field, like "text" or "timestamp"
-		m := doc.Data()
-
-		m["WebhookID"] = id
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(m)
+		json.NewEncoder(w).Encode(webhook)
 	} else {
 		// Retrieve all webhooks if no id is provided
-		iter := Client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
+		webhookCache.RLock()
+		defer webhookCache.RUnlock()
 
-		var hooks []structs.WebhookGet
-
-		for {
-			doc, err := iter.Next()
-			if err == iterator.Done {
-				break
-			}
-			if err != nil {
-				log.Fatalf("Failed to iterate: %v", err)
-			}
-
-			// A message map with string keys. Each key is one field, like "text" or "timestamp"
-			m := doc.Data()
-			m["WebhookID"] = doc.Ref.ID
-
-			if m["Calls"] != nil {
-
-				newHook := structs.WebhookGet{
-					WebhookID: m["WebhookID"].(string),
-					Url:       m["Url"].(string),
-					Country:   m["Country"].(string),
-					Calls:     m["Calls"].(int64),
-				}
-
-				hooks = append(hooks, newHook)
-			}
-
+		hooks := make([]structs.WebhookGet, 0, len(webhookCache.cache))
+		for _, hook := range webhookCache.cache {
+			hooks = append(hooks, hook)
 		}
 
-		// Encode the response body and send it to the client
-		marshallResponse, err := json.Marshal(hooks)
-		if err != nil {
-			log.Println("Error in encoding response body", err.Error())
-			http.Error(w, "Error in encoding response body", http.StatusBadRequest)
-			return
-		}
 		// Set the content type to JSON
 		w.Header().Set("Content-Type", "application/json")
-		// Set the status code to 201 (Created)
+		// Set the status code to 200 (OK)
 		w.WriteHeader(http.StatusOK)
 		// Write the response body
-		w.Write(marshallResponse)
+		json.NewEncoder(w).Encode(hooks)
 	}
 }
 
 func UpdateAndInvoke(isoCode string) {
+	webhookCache.RLock()
+	defer webhookCache.RUnlock()
 
-	// Get all webhooks from Firestore
-	iter := Client.Collection(collection).Documents(ctx) // Loop through all entries in collection "messages"
-
-	var hooks []structs.WebhookGet
-
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Printf("Failed to iterate: %v", err)
-		}
-
-		// A message map with string keys. Each key is one field, like "text" or "timestamp"
-		m := doc.Data()
-		m["WebhookID"] = doc.Ref.ID
-
-		if m["Calls"] != nil {
-
-			newHook := structs.WebhookGet{
-				WebhookID: m["WebhookID"].(string),
-				Url:       m["Url"].(string),
-				Country:   m["Country"].(string),
-				Calls:     m["Calls"].(int64),
-				Counter:   m["Counter"].(int64),
-			}
-			hooks = append(hooks, newHook)
-		}
-	}
-
-	// Loop through all webhooks
-	for _, currentHook := range hooks {
-		// If current webhook == isoCode
+	for _, currentHook := range webhookCache.cache {
 		if currentHook.Country == strings.ToUpper(isoCode) {
 			currentHook.Counter++
-			// If conditions for invocation are met
+
 			if (currentHook.Counter%currentHook.Calls == 0) && currentHook.Counter > 0 {
 				invokeWebhook(currentHook)
 			}
-		}
-		// Update webhook in Firestore
-		docRef := Client.Collection(collection).Doc(currentHook.WebhookID)
 
-		// Set the "counter" field of the webhook to the new value
-		_, err := docRef.Set(ctx, currentHook)
+			// Update webhook in Firestore
+			docRef := Client.Collection(collection).Doc(currentHook.WebhookID)
 
-		// If error, log and return
-		if err != nil {
-			log.Printf("Failed updating document: %v", err)
+			_, err := docRef.Set(ctx, currentHook)
+
+			if err != nil {
+				log.Printf("Failed updating document: %v", err)
+			}
 		}
 	}
 }
@@ -356,5 +386,4 @@ func invokeWebhook(invoke structs.WebhookGet) {
 		log.Println("Error during request creation. Error:", err)
 		return
 	}
-
 }

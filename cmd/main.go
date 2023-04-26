@@ -23,6 +23,10 @@ func main() {
 	}
 	defer handler.Client.Close()
 
+	handler.InitCache()
+	handler.UpdateCache()
+	go handler.PeriodicSyncCache()
+
 	mux := http.NewServeMux() // Create a new ServeMux for the main application
 	mux.HandleFunc(Assignment2.DEFAULT_PATH, handler.EmptyHandler)
 	mux.HandleFunc(Assignment2.HISTORY_PATH, handler.HistoryHandler)
