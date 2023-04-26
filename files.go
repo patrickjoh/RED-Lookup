@@ -36,7 +36,7 @@ func ConvertCsvData() []structs.CountryData {
 		fmt.Println(err)
 	}
 	defer func(file *os.File) {
-		err := file.Close()
+		err = file.Close()
 		if err != nil {
 			fmt.Println("Error closing file: ", err)
 		}
