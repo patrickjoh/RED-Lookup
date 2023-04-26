@@ -6,3 +6,4 @@ services:
     image: assignment2:latest
     ports:
       - "80:8080"
+    restart: always
