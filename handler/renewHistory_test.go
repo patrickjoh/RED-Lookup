@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Assignment2"
+	"Assignment2/structs"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -232,8 +233,22 @@ func TestNoCountryFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, response.StatusCode)
 }
 
+func TestGetCountriesMean(t *testing.T) {
+	sampleData := []structs.CountryData{
+		{Name: "Norway", IsoCode: "NOR", Year: 1990, Percentage: 72.44774},
+		{Name: "Norway", IsoCode: "NOR", Year: 1991, Percentage: 71.44005},
+	}
+
+	expected := []structs.CountryMean{
+		{Name: "Norway", IsoCode: "NOR", Percentage: 71.943895},
+	}
+	result := getAllCountriesMean(sampleData)
+
+	assert.Equal(t, expected, result)
+}
+
 /*
-TestHandleMeanGet tests the mean functionality of handleHistoryGet
+TestHandleMeanGet tests the mean functiona	lity of handleHistoryGet
 */
 
 /*
