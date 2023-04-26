@@ -102,9 +102,13 @@ func SyncCacheToFirebase() {
 		tmpCache[webhook.WebhookID] = webhook
 		updatedWebhooksCount++
 		docRef := Client.Collection(collection).Doc(webhook.WebhookID)
-		batch.Set(docRef, map[string]interface{}{
+		_, err := batch.Set(docRef, map[string]interface{}{
 			"Counter": webhook.Counter,
-		}, firestore.MergeAll) // Add the update operation to the BulkWriter
+		}, firestore.MergeAll)
+		if err != nil {
+			log.Printf("Error updating document: %s", err)
+			return
+		}
 
 	}
 	if updatedWebhooksCount > 0 {
@@ -255,7 +259,12 @@ func registerWebhook(w http.ResponseWriter, r *http.Request) {
 	// Set the status code to 201 (Created)
 	w.WriteHeader(http.StatusCreated)
 	// Write the response body
-	w.Write(jsonResponse)
+	_, err = w.Write(jsonResponse)
+	if err != nil {
+		log.Println("Error sending response")
+		http.Error(w, "Error sending response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // deleteWebhook deletes a webhook from Firestore db and the in-memory cache
@@ -307,7 +316,13 @@ func deleteWebhook(w http.ResponseWriter, r *http.Request) {
 	// Set the content type to JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK) // Set the status code to 200 (OK)
-	w.Write(jsonData)            // Write the response body
+	// Write the response body
+	_, err = w.Write(jsonData)
+	if err != nil {
+		log.Println("Error sending response")
+		http.Error(w, "Error sending response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
