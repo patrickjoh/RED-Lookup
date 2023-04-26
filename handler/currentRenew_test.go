@@ -37,7 +37,6 @@ func TestGetAllCountries(t *testing.T) {
 
 // TestGetAllCountries tests the getAllCountries function
 func TestGetAllCountriesNoData(t *testing.T) {
-	InitFirebase()
 	// Expected output
 	data := []structs.CountryData{}
 
@@ -48,7 +47,6 @@ func TestGetAllCountriesNoData(t *testing.T) {
 
 // TestGetOneCountry tests the getOneCountry function
 func TestGetOneCountry(t *testing.T) {
-	InitFirebase()
 	// Expected output
 	expected := []structs.CountryData{
 		{Name: "Azerbaijan", Year: 2021, IsoCode: "AZE", Percentage: 54.2},
@@ -64,8 +62,6 @@ func TestGetOneCountry(t *testing.T) {
 
 // TestCurrentRenew tests current endpoint with no iso code
 func TestCurrentRenew(t *testing.T) {
-	InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
 	defer server.Close()
 
@@ -78,8 +74,6 @@ func TestCurrentRenew(t *testing.T) {
 
 // TestCurrentRenewTooManyParts tests current endpoint if there are too many parts
 func TestCurrentRenewTooManyParts(t *testing.T) {
-	InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
 	defer server.Close()
 
@@ -92,8 +86,6 @@ func TestCurrentRenewTooManyParts(t *testing.T) {
 
 // TestGetOneCountryWrongMethod tests current endpoint if the method is not implemented
 func TestGetOneCountryWrongMethod(t *testing.T) {
-	InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
 	defer server.Close()
 
@@ -106,8 +98,6 @@ func TestGetOneCountryWrongMethod(t *testing.T) {
 
 // TestGetOneCountryTooLongIso tests current endpoint if the iso code is not three letters long
 func TestGetOneCountryTooLongIso(t *testing.T) {
-	InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
 	defer server.Close()
 
@@ -120,8 +110,6 @@ func TestGetOneCountryTooLongIso(t *testing.T) {
 
 // TestGetOneCountryNonExistingIso tests the current endpoint if a non-existing iso code is provided
 func TestGetOneCountryNonExistingIso(t *testing.T) {
-	InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
 	defer server.Close()
 
@@ -134,8 +122,6 @@ func TestGetOneCountryNonExistingIso(t *testing.T) {
 
 // TestGetOneCountryNonExistingIso tests the current endpoint if a non-existing iso code is provided
 func TestGetOneCountryWrongPath(t *testing.T) {
-	InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
 	defer server.Close()
 
@@ -148,8 +134,6 @@ func TestGetOneCountryWrongPath(t *testing.T) {
 
 // TestGetNeighborCountry tests the current endpoint if ...
 func TestGetNeighborCountry(t *testing.T) {
-	InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
 	defer server.Close()
 
@@ -162,8 +146,6 @@ func TestGetNeighborCountry(t *testing.T) {
 
 // TestRenewablesHandlerInvalidBool tests the current endpoint with invalid bool
 func TestRenewablesHandlerInvalidBool(t *testing.T) {
-	InitFirebase()
-
 	server := httptest.NewServer(http.HandlerFunc(RenewablesHandler))
 	defer server.Close()
 
