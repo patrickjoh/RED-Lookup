@@ -11,6 +11,7 @@ type Neighbour struct {
 	Code string `json:"code"`
 }
 
+// NeighbourHandler is a function that handles the /neighbour stub endpoint
 func NeighbourHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// If the request is a GET, then call the stubHandler
@@ -25,6 +26,7 @@ func NeighbourHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// handlerNeighbour Handles json input and returns it
 func handlerNeighbour(w http.ResponseWriter) {
 	// Set the content type to JSON
 	w.Header().Set("Content-Type", "application/json")
