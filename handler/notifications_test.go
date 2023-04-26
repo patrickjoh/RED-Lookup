@@ -23,31 +23,6 @@ var sampleBody = map[string]interface{}{
 	"calls":   69,
 }
 
-// mockFirestoreClient struct for testing
-type mockFirestoreClient struct {
-	data map[string]interface{}
-}
-
-// Create a mock Firestore client with test data
-var mockClient = &mockFirestoreClient{
-	data: map[string]interface{}{
-		"webhook1": map[string]interface{}{
-			"WebhookID": "webhook1",
-			"Url":       "https://example.com",
-			"Country":   "US",
-			"Calls":     int64(2),
-			"Counter":   int64(0),
-		},
-		"webhook2": map[string]interface{}{
-			"WebhookID": "webhook2",
-			"Url":       "https://example.org",
-			"Country":   "CA",
-			"Calls":     int64(3),
-			"Counter":   int64(0),
-		},
-	},
-}
-
 // Testing the initialization of firebase
 func TestInitFirebase(t *testing.T) {
 	//initialize firebase values
@@ -98,6 +73,25 @@ func TestRegisterWebhook(t *testing.T) {
 func TestRegisterWebhookNoValue(t *testing.T) {
 	//create request
 	sample := []byte(`{"url": "https://example.com"}`)
+	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(sample))
+	assert.Nil(t, err)
+
+	resp := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(NotificationsHandler)
+
+	handler.ServeHTTP(resp, request)
+
+	// Check that the webhook was created successfully and get its ID
+	require.Equal(t, http.StatusBadRequest, resp.Code)
+}
+
+// TestRegisterWebhookNoValue test invalid number of calls
+func TestRegisterWebhookInvalidCalls(t *testing.T) {
+	//create request
+	sample := []byte(`{"url":"https://webhook.site/63e2fb75-0742-44c1-9f14-fdd327649704",
+	"country": "col",
+	"calls":   -1}`)
 	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(sample))
 	assert.Nil(t, err)
 
