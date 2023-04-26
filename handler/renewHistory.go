@@ -72,7 +72,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Find all entries for a given country if an Iso code has been specified
 	if iso != "" {
 		countryIterators = findCountry(countryIterators, iso) // Slice of one country's history
-		UpdateAndInvoke(iso)                                  // UWU maybe work, maybe not????
 	}
 	// Find country's history from year(begin to end)
 	for _, col := range countryIterators {
@@ -84,6 +83,7 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 					Year:       col.Year,
 					Percentage: col.Percentage,
 				}
+				// Append the accepted data to the list
 				countData = append(countData, newHisData)
 			}
 		}
@@ -122,7 +122,8 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		// Updates and invokes for the single country
+		UpdateAndInvoke(countData[1].IsoCode)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonResponse)
 	}
