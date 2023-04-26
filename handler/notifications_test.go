@@ -124,7 +124,7 @@ func TestRegisterWebhook(t *testing.T) {
 // TestRegisterWebhookNoValue test unsuccessful testRegisterWebhook add fail
 func TestRegisterWebhookNoValue(t *testing.T) {
 	//create request
-	sample := []byte(`{"url": "https://example.com"}`)
+	sample := []byte(`{""}`)
 	request, err := http.NewRequest(http.MethodPost, Assignment2.NOTIFICATION_PATH, bytes.NewReader(sample))
 	assert.Nil(t, err)
 
@@ -209,10 +209,6 @@ func TestRetrieveWebhookWithID(t *testing.T) {
 	resp, err := client.Do(req)
 	assert.Nil(t, err)
 
-	if resp.StatusCode != http.StatusOK {
-		log.Println("Status code: ", resp.StatusCode)
-	}
-	log.Println("response here:", resp.StatusCode)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	var recievedResponse structs.WebhookGet
@@ -340,3 +336,38 @@ func TestUpdateAndInvoke(t *testing.T) {
 	}
 }
 */
+
+// TestInvokeWebhook test if Invoked
+func TestInvokeWebhook(t *testing.T) {
+	// Create a mock HTTP server that will receive the POST request
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		// Check that the received content type is "application/json"
+		if req.Header.Get("Content-Type") != "application/json" {
+			t.Errorf("unexpected content type: %s", req.Header.Get("Content-Type"))
+		}
+		// Decode the received JSON payload into a WebhookInvoke struct
+		var receivedData structs.WebhookInvoke
+		err := json.NewDecoder(req.Body).Decode(&receivedData)
+		assert.Nil(t, err, "error decoding received data: %v", err)
+
+		// Check that the received data matches the expected data
+		expectedData := structs.WebhookInvoke{
+			WebhookID: "test",
+			Country:   "test",
+			Calls:     1,
+		}
+		if receivedData != expectedData {
+			t.Errorf("unexpected received data: %+v", receivedData)
+		}
+	}))
+	defer server.Close()
+
+	// Call the function with test data
+	testInvoke := structs.WebhookGet{
+		WebhookID: "test",
+		Country:   "test",
+		Counter:   1,
+		Url:       server.URL,
+	}
+	invokeWebhook(testInvoke)
+}

@@ -23,9 +23,9 @@ func main() {
 	}
 	defer handler.Client.Close()
 
-	handler.InitCache()
-	handler.UpdateCache()
-	go handler.PeriodicSyncCache()
+	handler.InitCache()                 // Initialize the cache
+	go handler.PeriodicSyncCache()      // Start a goroutine to periodically sync the cache to Firebase
+	defer handler.SyncCacheToFirebase() // Sync the cache to Firebase before closing the application
 
 	mux := http.NewServeMux() // Create a new ServeMux for the main application
 	mux.HandleFunc(Assignment2.DEFAULT_PATH, handler.EmptyHandler)
