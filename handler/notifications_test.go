@@ -12,10 +12,21 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 )
 
 // webhookID of the newly created webhook
 var WebHookID string
+
+// struct to avoid time variables
+type webhookNoTimeVar struct {
+	WebhookID string `json:"webhook_id" omitempty:"true"`
+	Url       string `json:"url"`
+	Country   string `json:"country"`
+	Calls     int64  `json:"calls"`
+	Counter   int64  `json:"counter" omitempty:"true"`
+	Modified  bool   `json:"modified" omitempty:"true"`
+}
 
 // test post value
 var sampleBody = map[string]interface{}{
@@ -23,6 +34,7 @@ var sampleBody = map[string]interface{}{
 	"url":        "https://webhook.site/63e2fb75-0742-44c1-9f14-fdd327649704",
 	"country":    "col",
 	"calls":      69,
+	"created":    time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
 }
 
 // TestInitFirebase Testing the initialization of firebase
@@ -40,12 +52,12 @@ func TestInitCache(t *testing.T) {
 	// retrieve all data from Firebase and convert it all to structs.WebhookGet format
 	docRef, err := Client.Collection(collection).Documents(ctx).GetAll()
 	require.NoError(t, err)
-	registeredWebhook := make(map[string]structs.WebhookGet)
+	registeredWebhook := make(map[string]webhookNoTimeVar)
 	for _, doc := range docRef {
 		data := doc.Data()
 		webhookID := doc.Ref.ID
 		if calls, ok := data["Calls"].(int64); ok {
-			newHook := structs.WebhookGet{
+			newHook := webhookNoTimeVar{
 				WebhookID: webhookID,
 				Url:       data["Url"].(string),
 				Country:   data["Country"].(string),
@@ -56,8 +68,21 @@ func TestInitCache(t *testing.T) {
 		}
 	}
 
+	//convert struct.WebhookGet to noTimeVar
+	updatedCache := make(map[string]webhookNoTimeVar)
+	for _, cache := range webhookCache.cache {
+		updatedCache[cache.WebhookID] = webhookNoTimeVar{
+			WebhookID: cache.WebhookID,
+			Url:       cache.Url,
+			Country:   cache.Country,
+			Calls:     cache.Calls,
+			Counter:   cache.Counter,
+			Modified:  cache.Modified,
+		}
+	}
+
 	//check if one of the value in the webhook is registered in the cache
-	assert.Equal(t, registeredWebhook, webhookCache.cache)
+	assert.Equal(t, registeredWebhook, updatedCache)
 }
 
 // TestRegisterWebhook test successful registerWebhook add to firebase successfully
@@ -105,7 +130,7 @@ func TestRegisterWebhook(t *testing.T) {
 	docRef := Client.Collection(collection).Doc(webhookID)
 	docSnapshot, err := docRef.Get(ctx)
 	require.NoError(t, err)
-	var registeredWebhook structs.WebhookGet
+	var registeredWebhook webhookNoTimeVar
 	err = docSnapshot.DataTo(&registeredWebhook)
 	require.NoError(t, err)
 
@@ -122,12 +147,13 @@ func TestSyncCacheToFirebase(t *testing.T) {
 	// start retrieval of all data from Firebase and convert it all to structs.WebhookGet format
 	docRef, err := Client.Collection(collection).Documents(ctx).GetAll()
 	require.NoError(t, err)
-	startWebhook := make(map[string]structs.WebhookGet)
+
+	startWebhook := make(map[string]webhookNoTimeVar)
 	for _, doc := range docRef {
 		data := doc.Data()
 		webhookID := doc.Ref.ID
 		if calls, ok := data["Calls"].(int64); ok {
-			newHook := structs.WebhookGet{
+			newHook := webhookNoTimeVar{
 				WebhookID: webhookID,
 				Url:       data["Url"].(string),
 				Country:   data["Country"].(string),
@@ -155,12 +181,12 @@ func TestSyncCacheToFirebase(t *testing.T) {
 	// updated retrieve of all data from Firebase and convert it all to structs.WebhookGet format
 	docRef2, err := Client.Collection(collection).Documents(ctx).GetAll()
 	require.NoError(t, err)
-	endWebhook := make(map[string]structs.WebhookGet)
+	endWebhook := make(map[string]webhookNoTimeVar)
 	for _, doc := range docRef2 {
 		data := doc.Data()
 		webhookID := doc.Ref.ID
 		if calls, ok := data["Calls"].(int64); ok {
-			newHook := structs.WebhookGet{
+			newHook := webhookNoTimeVar{
 				WebhookID: webhookID,
 				Url:       data["Url"].(string),
 				Country:   data["Country"].(string),
@@ -171,11 +197,25 @@ func TestSyncCacheToFirebase(t *testing.T) {
 		}
 	}
 
+	//convert struct.WebhookGet to noTimeVar
+	updatedCache := make(map[string]webhookNoTimeVar)
+	for _, cache := range webhookCache.cache {
+		updatedCache[cache.WebhookID] = webhookNoTimeVar{
+			WebhookID: cache.WebhookID,
+			Url:       cache.Url,
+			Country:   cache.Country,
+			Calls:     cache.Calls,
+			Counter:   cache.Counter,
+			Modified:  cache.Modified,
+		}
+	}
+
 	//check if the firebase is updated correctly
 	require.NotEqual(t, startWebhook, endWebhook)
 
 	//check if cache is successfully synced in the firebase
-	assert.Equal(t, endWebhook, webhookCache.cache)
+	assert.Equal(t, endWebhook, updatedCache)
+
 }
 
 // TestRegisterWebhookNoValue test unsuccessful testRegisterWebhook add fail
@@ -268,7 +308,7 @@ func TestRetrieveWebhookWithID(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var recievedResponse structs.WebhookGet
+	var recievedResponse webhookNoTimeVar
 	_ = json.NewDecoder(resp.Body).Decode(&recievedResponse)
 
 	// Convert sampleBody to JSON format
@@ -276,7 +316,7 @@ func TestRetrieveWebhookWithID(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Unmarshal JSON data into WebhookGet struct
-	var expectedWebhook structs.WebhookGet
+	var expectedWebhook webhookNoTimeVar
 	err = json.Unmarshal(expectedJsonData, &expectedWebhook)
 	assert.Nil(t, err)
 
@@ -328,7 +368,7 @@ func TestDeleteWebhookWithID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var recievedResponse structs.WebhookGet
+	var recievedResponse webhookNoTimeVar
 	_ = json.NewDecoder(resp.Body).Decode(&recievedResponse)
 
 	// Convert sampleBody to JSON format
@@ -336,7 +376,7 @@ func TestDeleteWebhookWithID(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Unmarshal JSON data into WebhookGet struct
-	var expectedWebhook structs.WebhookGet
+	var expectedWebhook webhookNoTimeVar
 	err = json.Unmarshal(expectedJsonData, &expectedWebhook)
 	assert.Nil(t, err)
 
