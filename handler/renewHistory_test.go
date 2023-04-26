@@ -232,7 +232,28 @@ func TestNoCountryFound(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusNotFound, response.StatusCode)
 }
+func TestNoIsocode(t *testing.T) {
+	// Change current working directory to the directory where the test file is located
+	err := os.Chdir("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		// Reset the current working directory after the test has completed
+		err := os.Chdir("./handler")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+	server := httptest.NewServer(http.HandlerFunc(handleHistoryGet))
+	defer server.Close()
 
+	url := server.URL + Assignment2.HISTORY_PATH
+	response, err := http.Get(url)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+}
 func TestGetCountriesMean(t *testing.T) {
 	sampleData := []structs.CountryData{
 		{Name: "Norway", IsoCode: "NOR", Year: 1990, Percentage: 72.44774},
