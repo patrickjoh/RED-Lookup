@@ -1,6 +1,7 @@
 package stub
 
 import (
+	"log"
 	"net/http"
 )
 
@@ -10,6 +11,7 @@ type Neighbour struct {
 	Code string `json:"code"`
 }
 
+// NeighbourHandler is a function that handles the /neighbour stub endpoint
 func NeighbourHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	// If the request is a GET, then call the stubHandler
@@ -24,6 +26,7 @@ func NeighbourHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// handlerNeighbour Handles json input and returns it
 func handlerNeighbour(w http.ResponseWriter) {
 	// Set the content type to JSON
 	w.Header().Set("Content-Type", "application/json")
@@ -32,5 +35,10 @@ func handlerNeighbour(w http.ResponseWriter) {
 	output := parseFile("stub/res/NOR_Neighbours.json")
 
 	// Finally, let's write the JSON to the response
-	w.Write(output)
+	_, err := w.Write(output)
+	if err != nil {
+		log.Println("Error sending response: ", err)
+		http.Error(w, "Error sending response", http.StatusInternalServerError)
+		return
+	}
 }

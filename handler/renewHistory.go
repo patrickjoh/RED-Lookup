@@ -92,7 +92,13 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonResponse)
+		_, err = w.Write(jsonResponse)
+		if err != nil {
+			log.Println("Error sending response")
+			http.Error(w, "Error sending response", http.StatusInternalServerError)
+			return
+		}
+
 	} else { // Only data for one country is returned
 
 		rangedCountries = findCountry(Assignment2.ConvertCsvData(), iso)
@@ -128,7 +134,12 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonResponse)
+		_, err = w.Write(jsonResponse)
+		if err != nil {
+			log.Println("Error sending response")
+			http.Error(w, "Error sending response", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
