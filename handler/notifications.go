@@ -348,32 +348,25 @@ func UpdateAndInvoke(isoCode string) {
 	webhookCache.RLock()
 	defer webhookCache.RUnlock()
 
-	for _, currentHook := range webhookCache.cache {
+	for webhookID, currentHook := range webhookCache.cache {
 		if currentHook.Country == strings.ToUpper(isoCode) {
 			currentHook.Counter++
-
-			if (currentHook.Counter%currentHook.Calls == 0) && currentHook.Counter > 0 {
-				invokeWebhook(currentHook)
+			// Checks if the counter is a multiple of amount of calls in the webhook
+			if currentHook.Counter%currentHook.Calls == 0 {
+				go invokeWebhook(currentHook)
 			}
 
-			// Update webhook in Firestore
-			docRef := Client.Collection(collection).Doc(currentHook.WebhookID)
-
-			_, err := docRef.Set(ctx, currentHook)
-
-			if err != nil {
-				log.Printf("Failed updating document: %v", err)
-			}
+			// Update webhook in cache
+			webhookCache.cache[webhookID] = currentHook
 		}
 	}
 }
 
+// invokeWebhook invokes a webhook
 func invokeWebhook(invoke structs.WebhookGet) {
 
-	id := invoke.WebhookID
-
 	data := structs.WebhookInvoke{
-		WebhookID: id,
+		WebhookID: invoke.WebhookID,
 		Country:   invoke.Country,
 		Calls:     invoke.Calls,
 	}
@@ -386,4 +379,5 @@ func invokeWebhook(invoke structs.WebhookGet) {
 		log.Println("Error during request creation. Error:", err)
 		return
 	}
+
 }
