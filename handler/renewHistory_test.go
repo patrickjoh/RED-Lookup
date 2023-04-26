@@ -158,7 +158,6 @@ func TestBeginEnd(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 }
 
-/*
 func TestNoCountryFound(t *testing.T) {
 	// Change current working directory to the directory where the test file is located
 	err := os.Chdir("..")
@@ -181,8 +180,6 @@ func TestNoCountryFound(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusNotFound, response.StatusCode)
 }
-
-*/
 
 /*
 TestHandleMeanGet tests the mean functionality of handleHistoryGet
