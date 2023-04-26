@@ -24,7 +24,7 @@ func TestHandleHistoryGet(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
-
+	// Sample data
 	sampleData := []structs.CountryData{
 		{Name: "Norway", IsoCode: "NOR", Year: 1990, Percentage: 72.44774},
 		{Name: "Norway", IsoCode: "NOR", Year: 1991, Percentage: 71.44005},
@@ -38,9 +38,9 @@ func TestHandleHistoryGet(t *testing.T) {
 		{Name: "Norway", IsoCode: "NOR", Year: 1991, Percentage: 71.44005},
 		{Name: "Norway", IsoCode: "NOR", Year: 1992, Percentage: 71.865555},
 	}
-
+	// Test getFromBeginToEnd function
 	result := getFromBeginToEnd(1990, 1992, sampleData)
-
+	// Assert that the expected output is equal to the result
 	assert.Equal(t, expected, result)
 
 }
@@ -59,7 +59,7 @@ func TestMethodNotImplemented(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
-
+	//
 	server := httptest.NewServer(http.HandlerFunc(HistoryHandler))
 	defer server.Close()
 
