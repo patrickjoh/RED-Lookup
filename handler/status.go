@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -21,9 +22,10 @@ func init() {
 
 // StatusHandler is the entry point handler for Status handler
 func StatusHandler(w http.ResponseWriter, r *http.Request) {
+
 	switch r.Method {
 	case http.MethodGet:
-		handleStatus(w)
+		handleStatus(w, r)
 	default:
 		http.Error(w, "REST Method '"+r.Method+"' not supported. Currently only '"+http.MethodGet+
 			"' is supported.", http.StatusNotImplemented)
@@ -32,7 +34,18 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleStatus: shows availability for all third party services
-func handleStatus(w http.ResponseWriter) {
+func handleStatus(w http.ResponseWriter, r *http.Request) {
+
+	// Remove the trailing slash and split the URL into parts
+	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
+
+	// Error handling request url
+	if len(parts) != 4 || parts[3] != "status" {
+		http.Error(w, "Malformed URL", http.StatusBadRequest)
+		log.Println("Malformed URL")
+		return
+	}
+
 	// Define the URL
 	restURL := "http://129.241.150.113:8080/"
 
@@ -42,6 +55,7 @@ func handleStatus(w http.ResponseWriter) {
 		http.Error(w, fmt.Sprintf("Error opening CSV file: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
+
 	defer func(fd *os.File) {
 		err := fd.Close()
 		if err != nil {
