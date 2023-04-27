@@ -44,11 +44,6 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 	begin := params.Get("begin")
 	end := params.Get("end")
 	sortByValue := params.Get("sortByValue")
-	if begin > end && end != "" {
-		log.Printf("begining year (%s) > ending year(%s)", begin, end)
-		http.Error(w, "Incorrect use of year. Try history/{country?}{?begin=year&end=year?}", http.StatusBadRequest)
-		return
-	}
 
 	var rangedCountries []structs.CountryData // Slice to hold countries in range
 	var startYear = 0                         // Default value for start year
@@ -66,7 +61,12 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		} else if end != "" && begin != "" { // If both begin and end year is given
 			startYear, _ = strconv.Atoi(begin)
 			endYear, _ = strconv.Atoi(end)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.CSVData)
+			if startYear < endYear { // Check if begin year is smaller than end year
+				rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.CSVData)
+			} else { // Else return error
+				http.Error(w, "Incorrect use of year. 'begin' must be smaller than 'end'. Try history/{country?}{?begin=year&end=year?}", http.StatusBadRequest)
+				return
+			}
 		} else {
 			rangedCountries = Assignment2.CSVData // If no country is given, get all countries
 		}
@@ -112,7 +112,12 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		} else if begin != "" && end != "" { // If both begin and end year is given
 			startYear, _ = strconv.Atoi(begin)
 			endYear, _ = strconv.Atoi(end)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, rangedCountries)
+			if startYear < endYear { // Check if begin year is smaller than end year
+				rangedCountries = getFromBeginToEnd(startYear, endYear, rangedCountries)
+			} else { // Else return error
+				http.Error(w, "Incorrect use of year. 'begin' must be smaller than 'end'. Try history/{country?}{?begin=year&end=year?}", http.StatusBadRequest)
+				return
+			}
 		}
 
 		// If user want to sort by percentage
