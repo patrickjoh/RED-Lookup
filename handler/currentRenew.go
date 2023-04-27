@@ -53,17 +53,12 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 			if neighbourBool {
 				bordering, err := getNeighbourCountry(w, parts[5])
 				if err != nil {
-					log.Fatal(err)
+					http.Error(w, "No country found", http.StatusBadRequest)
+					return
 				} // Adding ISO codes for neighboring countries to list
 				for _, borders := range bordering {
 					countries = append(countries, borders)
 				}
-			}
-
-			if len(countries) < 1 {
-				log.Println("No country found")
-				http.Error(w, "No country found", http.StatusBadRequest)
-				return
 			}
 
 			// Fetching data for one country, possibly with neighbors
@@ -148,7 +143,10 @@ func getCountries(data []structs.CountryData, countrySearch []string) []structs.
 				currentHighestYear = current.Year
 			}
 		}
-		returnData = append(returnData, currentHighestEntry)
+		// Prevent duplicates
+		if len(returnData) == 0 || currentHighestEntry.Name != returnData[len(returnData)-1].Name {
+			returnData = append(returnData, currentHighestEntry)
+		}
 		currentHighestYear = 0
 		if len(relCountries) > 1 { // If a country was found
 			// Update counter for webhook invocation
@@ -172,12 +170,17 @@ func getNeighbourCountry(w http.ResponseWriter, searchCountry string) ([]string,
 		searchCountryURL = Assignment2.COUNTRYAPI_NAME + searchCountry
 	}
 	countryResponse, err := http.Get(searchCountryURL)
-
 	if err != nil {
 		http.Error(w, "Error during request to CountryAPI", http.StatusInternalServerError)
 		log.Println("Failed to get bordering country data from CountryAPI: ")
 		return nil, err
 	}
+
+	// If no country was found in the CountryAPI
+	if countryResponse.StatusCode == 404 {
+		return nil, err // Return empty slice
+	}
+
 	// Close the response body when the function returns
 	defer func() {
 		if countryResponse != nil {
@@ -219,7 +222,6 @@ func getNeighbourCountry(w http.ResponseWriter, searchCountry string) ([]string,
 		// Update counter for webhook invocation
 		UpdateAndInvoke(country.Alpha3Code)
 	}
-
 	// Return the list of border countries
 	return borderCountries, err
 }
