@@ -206,7 +206,6 @@ func getNeighbourCountry(w http.ResponseWriter, searchCountry string) ([]string,
 	// Check if the country has any bordering countries
 	if len(specCountryData[0].Border) == 0 {
 		http.Error(w, "No bordering countries", http.StatusNotFound)
-		log.Println("No bordering countries")
 		return nil, err
 	}
 	// Get country data from "REST_Countries" API based on the list of border countries
