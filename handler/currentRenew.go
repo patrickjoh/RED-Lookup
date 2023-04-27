@@ -112,12 +112,10 @@ func getAllCountries(data []structs.CountryData) []structs.CountryData {
 		//UpdateAndInvoke(record.IsoCode)   // UWU not certain if work??
 		retData = append(retData, record) // Adding the most recent entry for each country to a slice
 	}
-
 	// Sorting the retData slice alphabetically by country name
 	sort.Slice(retData, func(i, j int) bool {
 		return retData[i].Name < retData[j].Name
 	})
-
 	return retData
 }
 

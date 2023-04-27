@@ -392,7 +392,7 @@ func UpdateAndInvoke(isoCode string) {
 	defer webhookCache.Unlock() // Add defer to release lock after the function returns
 
 	for webhookID, currentHook := range webhookCache.cache {
-		if currentHook.Country == strings.ToUpper(isoCode) {
+		if currentHook.Country == strings.ToUpper(isoCode) || currentHook.Country == "" {
 			currentHook.Counter++       // Increment counter
 			currentHook.Modified = true // Reset modified flag
 			// Checks if the counter is a multiple of amount of calls in the webhook
