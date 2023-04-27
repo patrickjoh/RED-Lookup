@@ -30,19 +30,11 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	// Remove the trailing slash and split the URL into parts
 	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
 
-	// Error handling
-	if len(parts) < 5 || parts[4] != "current" {
-		http.Error(w, "Malformed URL", http.StatusBadRequest)
-		log.Println("Malformed URL")
-		return
-	}
-
 	// Get the neighbour parameter from the URL query parameters
 	neighbourStr := r.URL.Query().Get("neighbours")
 	neighbourBool, err := strconv.ParseBool(neighbourStr)
 	if err != nil && neighbourStr != "" {
 		http.Error(w, "Invalid neighbours parameter", http.StatusBadRequest)
-		log.Println("Invalid neighbours parameter")
 		return
 	}
 
@@ -52,32 +44,31 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	}
 	var countryData []structs.CountryData
 
-	// If the country code is provided
+	// If country name or code is provided
 	if len(parts) == 6 {
-		if len(parts[5]) != 3 {
-			http.Error(w, "Iso code must be 3 letter long", http.StatusBadRequest)
-			log.Println("Iso code not 3 letters long: ", parts[5])
+		if len(parts[5]) < 3 {
+			http.Error(w, "Input must me either a 3 letter ISO code or a country name", http.StatusBadRequest)
 		} else {
-			var isoCodes []string
-			isoCodes = append(isoCodes, parts[5])
+			var countries []string
+			countries = append(countries, parts[5])
 			if neighbourBool {
 				bordering, err := getNeighborCountry(w, parts[5])
 				if err != nil {
 					log.Fatal(err)
 				} // Adding ISO codes for neighboring countries to list
 				for _, borders := range bordering {
-					isoCodes = append(isoCodes, borders)
+					countries = append(countries, borders)
 				}
 			}
 
-			if len(isoCodes) < 1 {
-				log.Println("No iso code found")
-				http.Error(w, "No iso code found", http.StatusBadRequest)
+			if len(countries) < 1 {
+				log.Println("No country found")
+				http.Error(w, "No country found", http.StatusBadRequest)
 				return
 			}
 
 			// Fetching data for one country, possibly with neighbors
-			countryData = getOneCountry(Assignment2.CSVData, isoCodes)
+			countryData = getOneCountry(Assignment2.CSVData, countries)
 
 			// No country found with matching data
 			if len(countryData) < 2 && countryData[0].Name == "" {
@@ -139,9 +130,9 @@ func getAllCountries(data []structs.CountryData) []structs.CountryData {
 // getOneCountry retrieves the latest entries for a given country, and if the neighbours
 // parameter is set to true, it also retrieves the latest entries for the countries
 // that share a border with the given country.
-func getOneCountry(data []structs.CountryData, isoCodes []string) []structs.CountryData {
+func getOneCountry(data []structs.CountryData, countrySearch []string) []structs.CountryData {
 
-	if len(isoCodes) < 1 {
+	if len(countrySearch) < 1 {
 		return []structs.CountryData{}
 	}
 
@@ -149,7 +140,7 @@ func getOneCountry(data []structs.CountryData, isoCodes []string) []structs.Coun
 	currentHighestYear := 0                     // The currently highest year found
 	var currentHighestEntry structs.CountryData // The struct with the currently highest year
 
-	for _, iso := range isoCodes {
+	for _, iso := range countrySearch {
 		relCountries := findCountry(data, iso)
 		for _, current := range relCountries {
 			// New highest year found
@@ -160,9 +151,10 @@ func getOneCountry(data []structs.CountryData, isoCodes []string) []structs.Coun
 		}
 		returnData = append(returnData, currentHighestEntry)
 		currentHighestYear = 0
-
-		// Update counter for webhook invocation
-		UpdateAndInvoke(iso)
+		if len(relCountries) > 1 { // If a country was found
+			// Update counter for webhook invocation
+			UpdateAndInvoke(relCountries[0].IsoCode)
+		}
 	}
 
 	return returnData
@@ -171,11 +163,16 @@ func getOneCountry(data []structs.CountryData, isoCodes []string) []structs.Coun
 // getNeighborCountry searches for and returns ISO codes of all countries that share a
 // border with the countries specified by the IsoCode parameter. Bordering countries
 // are returned as a slice of strings containing their ISO codes.
-func getNeighborCountry(w http.ResponseWriter, IsoCode string) ([]string, error) {
+func getNeighborCountry(w http.ResponseWriter, searchCountry string) ([]string, error) {
 	var borderCountries []string
+	var searchCountryURL string
 	// Get bordering countries data from "REST_Countries" API
-	specCountryURL := Assignment2.COUNTRYAPI_CODES + IsoCode
-	countryResponse, err := http.Get(specCountryURL)
+	if len(searchCountry) == 3 {
+		searchCountryURL = Assignment2.COUNTRYAPI_CODES + searchCountry
+	} else {
+		searchCountryURL = Assignment2.COUNTRYAPI_NAME + searchCountry
+	}
+	countryResponse, err := http.Get(searchCountryURL)
 
 	if err != nil {
 		http.Error(w, "Error during request to CountryAPI", http.StatusInternalServerError)

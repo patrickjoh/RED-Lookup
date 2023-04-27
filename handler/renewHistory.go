@@ -28,17 +28,10 @@ func HistoryHandler(w http.ResponseWriter, r *http.Request) {
 // if no country is specified returns the mean of the renewables for all countries by calling.
 // It also sorts the data by percentage in descending order
 func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
-	// Split url to get keyword
-	urlKeywords := strings.Split(r.URL.Path, "/")
+	// Remove the trailing slash and split the URL into parts
+	parts := strings.Split(strings.TrimSuffix(r.URL.Path, "/"), "/")
 
-	iso := urlKeywords[5]   // Get country isoCode from url
 	query := r.URL.RawQuery // Get the queries from url
-
-	// Iso must either be nothing or consist of three letters
-	if len(iso) != 3 && len(iso) != 0 {
-		http.Error(w, "Malformed URL", http.StatusBadRequest)
-		return
-	}
 
 	// Parse the query string into a map
 	params, err := url.ParseQuery(query)
@@ -57,26 +50,27 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var rangedCountries []structs.CountryData
-	var startYear = 0
-	var endYear = 3000
+	var rangedCountries []structs.CountryData // Slice to hold countries in range
+	var startYear = 0                         // Default value for start year
+	var endYear = 3000                        // Default value for end year
 
-	// If no Iso is given print all countries mean percentage else print one country's history
-	if iso == "" {
-		rangedCountries = Assignment2.ConvertCsvData()
-		if begin != "" && end == "" {
+	// If no iso or name is given, print all countries mean percentage, else print one country's history
+	if len(parts) == 5 {
+
+		if begin != "" && end == "" { // If only begin year is given
 			startYear, _ = strconv.Atoi(begin)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.ConvertCsvData())
-		} else if end != "" && begin == "" {
+			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.CSVData)
+		} else if end != "" && begin == "" { // If only end year is given
 			endYear, _ = strconv.Atoi(end)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.ConvertCsvData())
-		} else if end != "" && begin != "" {
+			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.CSVData)
+		} else if end != "" && begin != "" { // If both begin and end year is given
 			startYear, _ = strconv.Atoi(begin)
 			endYear, _ = strconv.Atoi(end)
-			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.ConvertCsvData())
+			rangedCountries = getFromBeginToEnd(startYear, endYear, Assignment2.CSVData)
+		} else {
+			rangedCountries = Assignment2.CSVData // If no country is given, get all countries
 		}
-
-		resp := getAllCountriesMean(rangedCountries) // get all countries mean percentage
+		resp := getAllCountriesMean(rangedCountries) // Get mean percentage for  all countries
 
 		// If user want to sort by percentage
 		if sortByValue == "true" {
@@ -85,12 +79,12 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 				return resp[i].Percentage < resp[j].Percentage
 			})
 		}
-
+		// Marshall the response into a JSON string
 		jsonResponse, err := json.Marshal(resp)
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		// Set the content type to JSON
 		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(jsonResponse)
 		if err != nil {
@@ -98,17 +92,24 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error sending response", http.StatusInternalServerError)
 			return
 		}
+	} else if len(parts) == 6 { // If country name or isoCode is given
+		countrySearch := parts[5] // Get country isoCode from url
 
-	} else { // Only data for one country is returned
+		// Input must either be nothing or consist of more than three letters
+		if len(countrySearch) < 3 {
+			http.Error(w, "Input must either be nothing or consist of three or more letters", http.StatusBadRequest)
+			return
+		}
 
-		rangedCountries = findCountry(Assignment2.ConvertCsvData(), iso)
-		if begin != "" && end == "" {
+		// Find country data for the given country
+		rangedCountries = findCountry(Assignment2.CSVData, countrySearch)
+		if begin != "" && end == "" { // If only begin year is given
 			startYear, _ = strconv.Atoi(begin)
 			rangedCountries = getFromBeginToEnd(startYear, endYear, rangedCountries)
-		} else if end != "" && begin == "" {
+		} else if end != "" && begin == "" { // If only end year is given
 			endYear, _ = strconv.Atoi(end)
 			rangedCountries = getFromBeginToEnd(startYear, endYear, rangedCountries)
-		} else if begin != "" && end != "" {
+		} else if begin != "" && end != "" { // If both begin and end year is given
 			startYear, _ = strconv.Atoi(begin)
 			endYear, _ = strconv.Atoi(end)
 			rangedCountries = getFromBeginToEnd(startYear, endYear, rangedCountries)
@@ -127,12 +128,12 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "No entry with matching credentials found", http.StatusNotFound)
 			return
 		}
-
+		// Marshall the response into a JSON string
 		jsonResponse, err := json.Marshal(rangedCountries)
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		// Set the content type to JSON
 		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(jsonResponse)
 		if err != nil {
@@ -140,6 +141,10 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error sending response", http.StatusInternalServerError)
 			return
 		}
+	} else { // If url is malformed
+		log.Println("Malformed URL")
+		http.Error(w, "Malformed URL", http.StatusBadRequest)
+		return
 	}
 }
 
@@ -191,7 +196,6 @@ func getAllCountriesMean(countries []structs.CountryData) []structs.CountryMean 
 				IsoCode:    current.IsoCode,
 				Percentage: mean,
 			}
-			UpdateAndInvoke(countryMean.IsoCode) // UWU maybe work, maybe not???
 			// Appends country to slice of countries
 			retData = append(retData, countryMean)
 		}

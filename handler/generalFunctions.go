@@ -9,23 +9,33 @@ import (
 	"strings"
 )
 
-// findCountry finds all entries in a struct slice that match the provided iso code
-func findCountry(countries []structs.CountryData, Iso string) []structs.CountryData {
+// findCountry finds all entries in a struct slice that match the provided iso code or country name
+func findCountry(countries []structs.CountryData, country string) []structs.CountryData {
 	var countryData []structs.CountryData // empty list for the final data
 
-	// Convert to upper case to avoid case sensitivity
-	Iso = strings.ToUpper(Iso)
+	country = strings.ToUpper(country) // Convert input to upper case to avoid case sensitivity
+
+	useIsoCode := len(country) == 3 // If the input is 3 characters long, it is an ISO code
+
 	for _, col := range countries {
-		if strings.Contains(col.IsoCode, Iso) {
+		// Determine the search field based on the length of the input string
+		searchField := strings.ToUpper(col.Name) // Convert current country name to match input
+		if useIsoCode {                          // If the input is an ISO code, search for the ISO code
+			searchField = col.IsoCode
+		}
+
+		// Check if the search field contains the input country string
+		if strings.Contains(searchField, country) {
 			newHisData := structs.CountryData{
 				Name:       col.Name,
 				IsoCode:    col.IsoCode,
 				Year:       col.Year,
 				Percentage: col.Percentage,
 			}
-			countryData = append(countryData, newHisData)
+			countryData = append(countryData, newHisData) // Add the matching entry to the final list
 		}
 	}
+
 	return countryData
 }
 

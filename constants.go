@@ -20,10 +20,11 @@ const (
 
 	// EXTERNAL API
 	COUNTRYAPI_CODES = "http://129.241.150.113:8080/v3.1/alpha?codes="
+	COUNTRYAPI_NAME  = "http://129.241.150.113:8080/v3.1/name/"
 
 	// STUB ENDPOINTS
-	//STUB_COUNTRY      = "http://localhost:8081/Country/" // Stubbed handler for country data
-	//STUB_NEIGHBOURS   = "http://localhost:8081/Neighbour/" // Stubbed handler for neighbour data
+	//STUB_COUNTRY      = "http://localhost:" + STUB_PORT + "/Country/" // Stubbed handler for country data
+	//STUB_NEIGHBOURS   = "http://localhost:" + STUB_PORT + "/Neighbour/" // Stubbed handler for neighbour data
 
 	// DATA-FILES
 	CSV_PATH        = "handler/data/renewable-share-energy.csv" // CSV_PATH is the path to the CSV file
