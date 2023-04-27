@@ -127,6 +127,9 @@ func handleHistoryGet(w http.ResponseWriter, r *http.Request) {
 		if len(rangedCountries) < 1 {
 			http.Error(w, "No entry with matching credentials found", http.StatusNotFound)
 			return
+		} else {
+			// Update counter for webhook invocation
+			UpdateAndInvoke(rangedCountries[0].IsoCode)
 		}
 		// Marshall the response into a JSON string
 		jsonResponse, err := json.Marshal(rangedCountries)

@@ -39,8 +39,8 @@ func findCountry(countries []structs.CountryData, country string) []structs.Coun
 	return countryData
 }
 
-// getCountries gets all countries from REST_countries and returns them as a slice of structs
-func getCountries(isoCode []string) ([]structs.Country, error) {
+// getRESTCountries gets all countries from REST_countries and returns them as a slice of structs
+func getRESTCountries(isoCode []string) ([]structs.Country, error) {
 
 	countryUrl := Assignment2.COUNTRYAPI_CODES
 	// Loop through each ISO code and append the code the URL

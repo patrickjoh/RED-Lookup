@@ -23,7 +23,7 @@ func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// handleRenewablesGet calls either getAllCountries or getOneCountry, depending on the parameters
+// handleRenewablesGet calls either getAllCountries or getCountries, depending on the parameters
 // provided by the user, to retrieve the most recent renewables percentages for countries.
 func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 
@@ -44,15 +44,14 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 	}
 	var countryData []structs.CountryData
 
-	// If country name or code is provided
-	if len(parts) == 6 {
+	if len(parts) == 6 { // If country name or code is provided
 		if len(parts[5]) < 3 {
 			http.Error(w, "Input must me either a 3 letter ISO code or a country name", http.StatusBadRequest)
 		} else {
 			var countries []string
 			countries = append(countries, parts[5])
 			if neighbourBool {
-				bordering, err := getNeighborCountry(w, parts[5])
+				bordering, err := getNeighbourCountry(w, parts[5])
 				if err != nil {
 					log.Fatal(err)
 				} // Adding ISO codes for neighboring countries to list
@@ -68,7 +67,7 @@ func handleRenewablesGet(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Fetching data for one country, possibly with neighbors
-			countryData = getOneCountry(Assignment2.CSVData, countries)
+			countryData = getCountries(Assignment2.CSVData, countries)
 
 			// No country found with matching data
 			if len(countryData) < 2 && countryData[0].Name == "" {
@@ -127,10 +126,10 @@ func getAllCountries(data []structs.CountryData) []structs.CountryData {
 	return retData
 }
 
-// getOneCountry retrieves the latest entries for a given country, and if the neighbours
+// getCountries retrieves the latest entries for a given country, and if the neighbours
 // parameter is set to true, it also retrieves the latest entries for the countries
 // that share a border with the given country.
-func getOneCountry(data []structs.CountryData, countrySearch []string) []structs.CountryData {
+func getCountries(data []structs.CountryData, countrySearch []string) []structs.CountryData {
 
 	if len(countrySearch) < 1 {
 		return []structs.CountryData{}
@@ -160,10 +159,10 @@ func getOneCountry(data []structs.CountryData, countrySearch []string) []structs
 	return returnData
 }
 
-// getNeighborCountry searches for and returns ISO codes of all countries that share a
+// getNeighbourCountry searches for and returns ISO codes of all countries that share a
 // border with the countries specified by the IsoCode parameter. Bordering countries
 // are returned as a slice of strings containing their ISO codes.
-func getNeighborCountry(w http.ResponseWriter, searchCountry string) ([]string, error) {
+func getNeighbourCountry(w http.ResponseWriter, searchCountry string) ([]string, error) {
 	var borderCountries []string
 	var searchCountryURL string
 	// Get bordering countries data from "REST_Countries" API
@@ -208,7 +207,7 @@ func getNeighborCountry(w http.ResponseWriter, searchCountry string) ([]string, 
 		return nil, err
 	}
 	// Get country data from "REST_Countries" API based on the list of border countries
-	countryData, err := getCountries(borders)
+	countryData, err := getRESTCountries(borders)
 	if err != nil {
 		http.Error(w, "Error during request to CountryAPI", http.StatusInternalServerError)
 		log.Println("Failed to get country data from CountryAPI, about the bordering countries")

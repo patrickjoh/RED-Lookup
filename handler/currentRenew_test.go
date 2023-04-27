@@ -45,7 +45,7 @@ func TestGetAllCountriesNoData(t *testing.T) {
 	assert.Equal(t, 0, len(result))
 }
 
-// TestGetOneCountry tests the getOneCountry function
+// TestGetOneCountry tests the getCountries function
 func TestGetOneCountry(t *testing.T) {
 	// Expected output
 	expected := []structs.CountryData{
@@ -55,7 +55,7 @@ func TestGetOneCountry(t *testing.T) {
 
 	isoCodes := []string{"AZE", "DEU"}
 
-	result := getOneCountry(sampleData, isoCodes)
+	result := getCountries(sampleData, isoCodes)
 
 	assert.Equal(t, expected, result)
 }
