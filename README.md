@@ -2,7 +2,7 @@
 
 This project is a REST web application in Golang that provides the client with the ability to retrieve information about
 developments related to renewable energy production for and across countries. This is done by using data from two
-existing services. The service also allows for notification registration using webhooks, and stores thes persistently
+external sources. This service also allows for notification registration using webhooks, and stores thes persistently
 using Firebase.
 
 # Table of Contents
@@ -39,6 +39,7 @@ using Firebase.
 * Create a Firebase project and enable the Firestore database.
 * Create a service account for the project and download the JSON file.
 * Copy the JSON file to the root directory of the project and rename it to `firebase.json`.
+* Make sure the Firestore database is empty.
 
 Change the following constants in 'constants.go' to match your preferences:
 
@@ -128,8 +129,8 @@ The service has four endpoints:
 ```http
 /energy/v1/renewables/current
 /energy/v1/renewables/history
-/energy/v1/notifications/
-/energy/v1/status/
+/energy/v1/notifications
+/energy/v1/status
 ```
 
 If the web service is running on localhost, port 8080,
@@ -157,7 +158,7 @@ Method: GET
 Path: /energy/v1/renewables/current/{country?}{?neighbours=bool?}
 ```
 
-`{country?}` refers to an optional country 3-letter code.
+`{country?}` refers to an optional country 3-letter code, and partial or full country name.
 
 `{?neighbours=bool?}` refers to an optional parameter indicating whether neighbouring countries' values also should be
 shown.
@@ -278,7 +279,7 @@ Method: GET
 Path: /energy/v1/renewables/history/{country?}{?begin=year&end=year?}{?sortByValue=true?}
 ```
 
-`{country}` refers to an optional country 3-letter code.
+`{country}` refers to an optional country 3-letter code, and partial or full country name.
 
 `{?begin=year&end=year}` refers to an optional parameter that limits output of the selected country to be within the
 given range.
@@ -291,6 +292,7 @@ percentage
 ```http
 /energy/v1/renewables/history
 /energy/v1/renewables/history/nor
+/energy/v1/renewables/history/?begin=1970
 /energy/v1/renewables/history/nor?begin=1970
 /energy/v1/renewables/history/nor?begin=1960&end=1970
 /energy/v1/renewables/history/nor?begin=1960&end=1970&sortByValue=true
@@ -365,9 +367,9 @@ Shows mean percentage for all countries
 
 ## Notifications
 
-Users can register webhooks that are triggered by the service based on specified events, specifically if information
-about given countries (or any country) is invoked, where the minimum frequency can be specified. Users can register
-multiple webhooks. The service saves these registrations in a Firebase DB backend.
+Users can register webhooks that are triggered by the service based on specified events, specifically if information about given countries (or any country) is invoked, where the minimum frequency can be specified. Users can register multiple webhooks. The service saves these registrations in a Firebase DB backend.
+
+Registered webhooks will be automatically deleted after 30 days.
 
 ### Registering a Webhook
 
@@ -383,9 +385,8 @@ Path: /energy/v1/notifications/
 The body contains:
 
 * The URL to be triggered upon event (the service that should be invoked)
-* The country for which the trigger applies (if empty, it applies to any invocation)
-* The number of invocations after which a notification is triggered (it should re-occur
-* Every number of invocations, i.e., if 5 is specified, it should occur after 5, 10, 15 invocation, and so on, unless
+* The country for which the trigger applies (if empty, it applies to any invocation for a specific country)
+* The number of invocations after which a notification is triggered (it will re-occur every number of invocations, i.e., if 5 is specified, it should occur after 5, 10, 15 invocation, and so on, unless
   the webhook is deleted).
 
 ```http
