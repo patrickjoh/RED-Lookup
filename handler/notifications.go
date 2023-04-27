@@ -45,7 +45,7 @@ func InitFirebase() error {
 // WebhookCache is a struct that holds a map of webhooks and a timestamp for the last sync.
 type WebhookCache struct {
 	sync.RWMutex
-	cache map[string]structs.WebhookGet
+	cache map[string]structs.Webhooks
 }
 
 var webhookCache WebhookCache
@@ -54,7 +54,7 @@ func InitCache() {
 
 	// Initialize a struct for the cache
 	webhookCache = WebhookCache{
-		cache: make(map[string]structs.WebhookGet),
+		cache: make(map[string]structs.Webhooks),
 	}
 
 	// Retrieve all documents from Firestore and add them to the cache
@@ -69,7 +69,7 @@ func InitCache() {
 		m["WebhookID"] = doc.Ref.ID
 
 		if m["WebhookID"] != nil {
-			newHook := structs.WebhookGet{
+			newHook := structs.Webhooks{
 				WebhookID: m["WebhookID"].(string),
 				Url:       m["Url"].(string),
 				Country:   m["Country"].(string),
@@ -94,7 +94,7 @@ func SyncCacheToFirebase() {
 
 	batch := Client.BulkWriter(ctx) // Create a new BulkWriter
 
-	tmpCache := make(map[string]structs.WebhookGet) // Creates a temp cache for webhooks that are modified
+	tmpCache := make(map[string]structs.Webhooks) // Creates a temp cache for webhooks that are modified
 	for _, webhook := range webhookCache.cache {
 		if !webhook.Modified {
 			continue
@@ -173,7 +173,7 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 // registerWebhook adds a webhook to Firestore db and in-memory cache
 func registerWebhook(w http.ResponseWriter, r *http.Request) {
 	// Decode the request body into a webhook struct
-	var newWebhook structs.WebhookGet
+	var newWebhook structs.Webhooks
 	err := json.NewDecoder(r.Body).Decode(&newWebhook)
 	if err != nil {
 		log.Println("Error in decoding request body", err.Error())
@@ -357,9 +357,15 @@ func retrieveWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 	} else { // Retrieve all webhooks from cache if no id is provided
 
-		webhooks := make([]structs.WebhookGet, 0, len(webhookCache.cache))
-		for _, hook := range webhookCache.cache {
-			webhooks = append(webhooks, hook)
+		webhooks := make([]structs.WebhookGet, 0, len(webhookCache.cache)) // Create a slice of WebhookGet structs
+		for _, hook := range webhookCache.cache {                          // Iterate over the map of webhooks
+			data := structs.WebhookGet{ // Place the webhook data into a WebhookGet struct
+				WebhookID: hook.WebhookID,
+				Url:       hook.Url,
+				Country:   hook.Country,
+				Calls:     hook.Calls,
+			}
+			webhooks = append(webhooks, data) // Append the WebhookGet struct to the slice
 		}
 
 		// Set the content type to JSON
@@ -399,7 +405,7 @@ func UpdateAndInvoke(isoCode string) {
 }
 
 // invokeWebhook invokes a webhook
-func invokeWebhook(invoke structs.WebhookGet) {
+func invokeWebhook(invoke structs.Webhooks) {
 	// Creates a new webhook invoke struct
 	data := structs.WebhookInvoke{
 		WebhookID: invoke.WebhookID,

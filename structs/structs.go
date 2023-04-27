@@ -31,7 +31,7 @@ type WebhookFirebase struct {
 	Created   time.Time `json:"created"`
 }
 
-type WebhookGet struct {
+type Webhooks struct {
 	WebhookID string    `json:"webhook_id" omitempty:"true"`
 	Url       string    `json:"url"`
 	Country   string    `json:"country"`
@@ -43,6 +43,13 @@ type WebhookGet struct {
 
 type WebhookInvoke struct {
 	WebhookID string `json:"webhook_id"`
+	Country   string `json:"country"`
+	Calls     int64  `json:"calls"`
+}
+
+type WebhookGet struct {
+	WebhookID string `json:"webhook_id"`
+	Url       string `json:"url"`
 	Country   string `json:"country"`
 	Calls     int64  `json:"calls"`
 }

@@ -49,7 +49,7 @@ func TestInitCache(t *testing.T) {
 	//initialize cache values
 	InitCache()
 
-	// retrieve all data from Firebase and convert it all to structs.WebhookGet format
+	// retrieve all data from Firebase and convert it all to structs.Webhooks format
 	docRef, err := Client.Collection(collection).Documents(ctx).GetAll()
 	require.NoError(t, err)
 	registeredWebhook := make(map[string]webhookNoTimeVar)
@@ -68,7 +68,7 @@ func TestInitCache(t *testing.T) {
 		}
 	}
 
-	//convert struct.WebhookGet to noTimeVar
+	//convert struct.Webhooks to noTimeVar
 	updatedCache := make(map[string]webhookNoTimeVar)
 	for _, cache := range webhookCache.cache {
 		updatedCache[cache.WebhookID] = webhookNoTimeVar{
@@ -144,7 +144,7 @@ func TestRegisterWebhook(t *testing.T) {
 
 // TestSyncCacheToFirebase test if firebase is updated
 func TestSyncCacheToFirebase(t *testing.T) {
-	// start retrieval of all data from Firebase and convert it all to structs.WebhookGet format
+	// start retrieval of all data from Firebase and convert it all to structs.Webhooks format
 	docRef, err := Client.Collection(collection).Documents(ctx).GetAll()
 	require.NoError(t, err)
 
@@ -178,7 +178,7 @@ func TestSyncCacheToFirebase(t *testing.T) {
 	// sync with SyncCacheToFirebase
 	SyncCacheToFirebase()
 
-	// updated retrieve of all data from Firebase and convert it all to structs.WebhookGet format
+	// updated retrieve of all data from Firebase and convert it all to structs.Webhooks format
 	docRef2, err := Client.Collection(collection).Documents(ctx).GetAll()
 	require.NoError(t, err)
 	endWebhook := make(map[string]webhookNoTimeVar)
@@ -197,7 +197,7 @@ func TestSyncCacheToFirebase(t *testing.T) {
 		}
 	}
 
-	//convert struct.WebhookGet to noTimeVar
+	//convert struct.Webhooks to noTimeVar
 	updatedCache := make(map[string]webhookNoTimeVar)
 	for _, cache := range webhookCache.cache {
 		updatedCache[cache.WebhookID] = webhookNoTimeVar{
@@ -315,7 +315,7 @@ func TestRetrieveWebhookWithID(t *testing.T) {
 	expectedJsonData, err := json.Marshal(sampleBody)
 	assert.Nil(t, err)
 
-	// Unmarshal JSON data into WebhookGet struct
+	// Unmarshal JSON data into Webhooks struct
 	var expectedWebhook webhookNoTimeVar
 	err = json.Unmarshal(expectedJsonData, &expectedWebhook)
 	assert.Nil(t, err)
@@ -375,7 +375,7 @@ func TestDeleteWebhookWithID(t *testing.T) {
 	expectedJsonData, err := json.Marshal(sampleBody)
 	assert.Nil(t, err)
 
-	// Unmarshal JSON data into WebhookGet struct
+	// Unmarshal JSON data into Webhooks struct
 	var expectedWebhook webhookNoTimeVar
 	err = json.Unmarshal(expectedJsonData, &expectedWebhook)
 	assert.Nil(t, err)
@@ -417,9 +417,9 @@ func TestDeleteWebhookNonExistingID(t *testing.T) {
 
 // TestUpdateAndInvoke tests the counter mechanism in UpdateAndInvoke
 func TestUpdateAndInvoke(t *testing.T) {
-	webhookCache.cache = make(map[string]structs.WebhookGet)
+	webhookCache.cache = make(map[string]structs.Webhooks)
 
-	testHook := structs.WebhookGet{Country: "TCD", Counter: 0, Calls: 2}
+	testHook := structs.Webhooks{Country: "TCD", Counter: 0, Calls: 2}
 	webhookCache.cache["TCD"] = testHook
 	UpdateAndInvoke("TCD")
 	UpdateAndInvoke("TCD")
@@ -458,7 +458,7 @@ func TestInvokeWebhook(t *testing.T) {
 	defer server.Close()
 
 	// Call the function with test data
-	testInvoke := structs.WebhookGet{
+	testInvoke := structs.Webhooks{
 		WebhookID: "test",
 		Country:   "test",
 		Counter:   1,
